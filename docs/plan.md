@@ -91,6 +91,47 @@ Post-event, approval needed: a shared online leaderboard, deploying to
 thinkinbits.site, a shared arcade shell, and the school logo once permission
 is confirmed.
 
+## Panther Arcade shared flows (set by Prowl in Phase 2)
+
+Panther Slash and Panther Pounce should match these, so the booth works the
+same way for all three games.
+
+- **Modes.** Boo Bash Challenge has a fixed round length, a fixed seed or
+  layout, and no lives (mistakes cost time or points, never the round).
+  Classic is the lives-based mode.
+- **Prize tiers.** Bronze, Silver, Gold and Legendary Panther. The names and
+  colors live in config; the thresholds are per device in staff mode.
+- **Prize stations.** Only devices staff mark as a "prize station" show a
+  prize code. Anywhere else, the game says "Prizes are won at the Boo Bash
+  booth".
+- **The station prize screen** shows:
+  - the station name, the play number and a live ticking clock (beats
+    screenshots)
+  - the tier medal, the score and how many points to the next tier
+  - a 4-character code: an FNV-1a hash of station secret | day | play # |
+    score | tier, written with the alphabet `ACDEFGHJKMNPQRTUVWXY34679`
+  
+  Every station play is written to a prize log that staff can search by play
+  number.
+- **Leaderboard.**
+  - localStorage only, 3-letter initials only.
+  - There's one board per (maze or level) + round length, with "Tonight" and
+    "All time" tabs and a top 10 on each.
+  - Initials are entered on an on-screen A–Z keypad (keyboard typing works
+    too), checked against the shared blocked list, with a Skip option.
+- **Staff mode.**
+  - Tap the moon 5 times within 3 s on the title screen, then enter the PIN
+    (default `1031`, with a warning until it's changed).
+  - Settings: prize station and name, round length, maze, tier thresholds,
+    kiosk on/off and idle seconds, change PIN.
+  - Score actions: erase tonight's / all scores (two-tap confirm, never
+    `window.confirm`), check a play number, prize log.
+- **Kiosk.** After the idle time on any results, prize, initials, leaderboard
+  or pause screen, return to the title. The title alternates with the high
+  scores (20 s / 10 s).
+- **Storage keys.** `<game>.v1.settings`, `.leaderboard`, `.playCount`,
+  `.prizeLog`.
+
 ## Open questions for Amali
 
 1. The event date: Thu Oct 29 or Fri Oct 30?
@@ -111,8 +152,15 @@ is confirmed.
   - `node --test` 26/26, and a 40-seed soak run with no stuck ghosts
   **Waiting on Amali:** checkpoint review, commit approval, and approval to
   delete the legacy Pac-Man files.
-- [ ] Phase 2: next (Challenge mode, prize screen + verification code,
-  leaderboard + initials, staff PIN, kiosk)
+- [x] Phase 2: built and verified Oct 27 (headless Chrome at 1280×800,
+  390×844, 844×390, 360×640 and 1024×768).
+  - Full flow: staff gesture → PIN → prize station → Challenge → prize screen
+    with a ticking clock and code → initials (blocked words refused) →
+    leaderboard with highlight → kiosk return.
+  - On a non-station device: no code, nothing logged.
+  - `node --test` 40/40.
+  **Waiting on Amali:** checkpoint review and commit approval.
+- [ ] Phase 3: next (polish, offline service worker, second maze, student PNGs)
 - Score calibration so far (90 s round): steering at random scores about
   1,250, and the autopilot scores a median of about 6,000. Placeholder tiers
   are set at 1,500 / 2,500 / 4,000 / 6,000.

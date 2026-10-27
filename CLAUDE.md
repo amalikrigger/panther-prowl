@@ -9,6 +9,9 @@ codebase**.
   `docs/plan.md` (the plan of record; update it there, don't fork it).
 - How to run and play, how to design mazes and ghosts, and the student
   workflow: `README.md`. Student task list: `docs/student-tasks.md`.
+- Event-night setup and volunteer steps: `docs/booth-guide.md`. The shared
+  prize, leaderboard, staff and kiosk conventions for all three games are in
+  `docs/plan.md` ("Panther Arcade shared flows").
 
 ## Panther Arcade
 

@@ -37,6 +37,18 @@ No Python? In VS Code, install the "Live Server" extension and click
 - **Tunnels:** run off one side of the maze to come back on the other.
 - **P** or **Esc** pauses. **M** mutes.
 
+### Two ways to play
+
+- **Boo Bash Challenge:** 90 seconds to score as much as you can. Getting
+  caught doesn't end the round, it just costs you time. Every Challenge starts
+  exactly the same way, so it's fair. Score enough for a **Bronze, Silver,
+  Gold or Legendary Panther** prize, and make the top 10 to put your initials
+  on the high-score board (just 3 letters, never your name).
+- **Classic:** 3 lives. Clear the hall to reach the next level, where the
+  ghosts get faster.
+
+Running the booth at the event? See [`docs/booth-guide.md`](docs/booth-guide.md).
+
 ### Meet the ghosts
 
 Each ghost has its own brain (see `src/core/ghost-brains.js`):
@@ -63,6 +75,8 @@ src/
     index.js          the list of mazes the game knows about
   core/               the game rules (no drawing, so they can be tested)
     game.js           eating, power, pouncing, lives, levels, the timer
+    prizes.js         prize tiers and prize codes
+    leaderboard.js    high-score rules and initials
     ghost-brains.js   ⭐ how each ghost decides where to go
     ghost.js          ghost states: waiting, leaving, roaming, eyes...
     panther.js        the player, including the turn buffer
@@ -78,12 +92,15 @@ src/
     layout.js         fits the maze to any screen
   input/controls.js   keyboard, swipes and the arrow pad
   audio/sound.js      sound effects made with code
-  storage/store.js    saves best scores on this device
-  ui/                 menus, score bar, fullscreen button
+  storage/            saves things on this device
+    store.js          safe localStorage helpers
+    booth.js          staff settings, high scores, prize log
+  ui/                 menus, score bar, prize screen, initials, high
+                      scores, staff mode, fullscreen button
   styles.css          how the menus look
 assets/               fonts (and credits for everything)
 tests/                tests for the game rules
-docs/                 the project plan and student tasks
+docs/                 the project plan, booth guide and student tasks
 ```
 
 ## Change the game

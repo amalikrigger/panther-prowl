@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="viewport" content="width=342, user-scalable=no" />
+<title>HTML5 Pacman</title>
+<style type="text/css">
+@font-face {
+font-family: 'Cartoon';
+src: url('Cartoon.ttf') format('truetype');
+font-weight: normal;
+font-style: normal;
+}
+#pacman
+{
+height:450px;
+width:342px;
+}
+body
+{
+width:342px;
+margin:0px;
+}
+a { text-decoration:none; }
+.roundbutton
+{
+position:absolute;top:0px;left:170px;margin-left:-90px;text-align:center;width:160px;background:#9f0;font-size:17px;border-radius:6px;border:2px solid #000;padding:3px 10px 1px 10px;cursor:pointer;color:#f00;z-index:5;font-family:Cartoon;
+}
+</style>
+</head>
+
+<body onload="init();">
+
+<div id="pacman">
+	<div id="test" style="position:absolute;top:0px;left:0px;color:#fff;"></div>
+	<div id="joystick" style="position:absolute;top:0px;left:0px;width:100%;height:100%;"></div>
+	<div id="overlay">
+		<span class="roundbutton" style="top:190px;" onclick="startNewGame();">START GAME</span>
+	</div>
+</div>
+
+<script src="nipplejs.min.js"></script>
+<script src="pacman.js"></script>
+
+</body>
+</html>

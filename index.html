@@ -1,48 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="viewport" content="width=342, user-scalable=no" />
-<title>Panther Prowl</title>
-<style type="text/css">
-@font-face {
-font-family: 'Cartoon';
-src: url('Cartoon.ttf') format('truetype');
-font-weight: normal;
-font-style: normal;
-}
-#pacman
-{
-height:450px;
-width:342px;
-}
-body
-{
-width:342px;
-margin:0px;
-}
-a { text-decoration:none; }
-.roundbutton
-{
-position:absolute;top:0px;left:170px;margin-left:-90px;text-align:center;width:160px;background:#9f0;font-size:17px;border-radius:6px;border:2px solid #000;padding:3px 10px 1px 10px;cursor:pointer;color:#f00;z-index:5;font-family:Cartoon;
-}
-</style>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover lets the game use the whole screen on phones with a notch. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Panther Prowl</title>
+  <meta name="description" content="Panther Prowl: a Halloween maze-chase game for the GHCDS Boo Bash.">
+  <meta name="theme-color" content="#12051f">
+
+  <!-- iPhones don't allow the fullscreen button, so "Add to Home Screen" is
+       how the game goes full screen there. -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Panther Prowl">
+  <!-- A gold paw icon for the browser tab, written right here so there's no extra file to load. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2312051f'/%3E%3Cg fill='%23F6BC1B'%3E%3Cellipse cx='12' cy='15' rx='5.5' ry='4.6'/%3E%3Cellipse cx='5.6' cy='9.6' rx='2.2' ry='2.7'/%3E%3Cellipse cx='9.6' cy='5.6' rx='2.2' ry='2.7'/%3E%3Cellipse cx='14.4' cy='5.6' rx='2.2' ry='2.7'/%3E%3Cellipse cx='18.4' cy='9.6' rx='2.2' ry='2.7'/%3E%3C/g%3E%3C/svg%3E">
+
+  <!-- Fonts are bundled so the game works with no internet. -->
+  <link rel="preload" href="assets/fonts/creepster-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/fredoka-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="src/styles.css">
+
+  <!-- All paths are relative (no leading "/"), so the game works from any
+       folder on any website, like thinkinbits.site/panther-prowl/. -->
+  <script type="module" src="src/main.js"></script>
 </head>
+<body data-screen="loading" data-layout="top">
+  <canvas id="game" aria-label="Game area: swipe, use the arrow pad, or press the arrow keys to move"></canvas>
 
-<body onload="init();">
+  <div id="ui">
+    <!-- In-game score display. -->
+    <header class="hud" id="hud" hidden>
+      <div class="hud-block hud-score">
+        <span class="hud-label">Score</span>
+        <span class="hud-value" id="hud-score">0</span>
+      </div>
+      <div class="hud-block hud-middle">
+        <span class="hud-label" id="hud-middle-label">Level</span>
+        <span class="hud-value hud-small" id="hud-middle">1</span>
+      </div>
+      <div class="hud-block hud-lives" id="hud-lives" aria-label="Lives"></div>
+      <button class="icon-button hud-pause" id="pause-button" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      </button>
+    </header>
 
-<div id="pacman">
-	<div id="test" style="position:absolute;top:0px;left:0px;color:#fff;"></div>
-	<div id="joystick" style="position:absolute;top:0px;left:0px;width:100%;height:100%;"></div>
-	<div id="overlay">
-		<span class="roundbutton" style="top:190px;" onclick="startNewGame();">START GAME</span>
-	</div>
-</div>
+    <!-- On-screen arrow pad for touch screens. Positioned by src/render/layout.js. -->
+    <div class="dpad" id="dpad" hidden aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <circle class="dpad-ring" cx="50" cy="50" r="47"/>
+        <path class="dpad-arrow" data-dir="up" d="M50 10 L64 30 H36 Z"/>
+        <path class="dpad-arrow" data-dir="down" d="M50 90 L64 70 H36 Z"/>
+        <path class="dpad-arrow" data-dir="left" d="M10 50 L30 36 V64 Z"/>
+        <path class="dpad-arrow" data-dir="right" d="M90 50 L70 36 V64 Z"/>
+        <circle class="dpad-center" cx="50" cy="50" r="10"/>
+      </svg>
+    </div>
 
-<script src="nipplejs.min.js"></script>
-<script src="pacman.js"></script>
+    <!-- Big words over the maze: "Ready?", "GO!", "Hall cleared!" -->
+    <div class="banner" id="banner" aria-live="polite"></div>
 
+    <section class="screen" id="screen-loading" aria-label="Loading">
+      <p class="loading-text">Unlocking the haunted halls…</p>
+    </section>
+
+    <section class="screen" id="screen-title" aria-label="Title">
+      <div class="panel title-panel">
+        <h1 class="logo">
+          <span class="logo-top">Panther</span>
+          <span class="logo-bottom">Prowl</span>
+        </h1>
+        <p class="tagline">Boo Bash 2026 · <span class="gold">#PantherPride</span></p>
+        <div class="menu">
+          <button class="button button-primary" data-action="play-classic">
+            <span class="button-title">Play</span>
+            <span class="button-sub">3 lives · clear the haunted halls</span>
+          </button>
+        </div>
+        <p class="how-to" id="how-to"></p>
+        <p class="best-line" id="best-line"></p>
+        <p class="hint" id="ios-hint" hidden>Tip: tap Share → “Add to Home Screen” to play full screen.</p>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-pause" aria-label="Paused">
+      <div class="panel">
+        <h2 class="screen-title">Paused</h2>
+        <div class="menu">
+          <button class="button button-primary" data-action="resume"><span class="button-title">Resume</span></button>
+          <button class="button button-secondary" data-action="quit"><span class="button-title">Quit to menu</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-results" aria-label="Results">
+      <div class="panel results-panel">
+        <h2 class="screen-title" id="results-title">Caught!</h2>
+        <div class="results-score">
+          <span class="results-label">Score</span>
+          <span class="results-value" id="results-score">0</span>
+          <span class="new-best" id="results-new-best" hidden>New best!</span>
+        </div>
+        <dl class="stats" id="results-stats"></dl>
+        <div class="menu">
+          <button class="button button-primary" data-action="play-again"><span class="button-title">Play again</span></button>
+          <button class="button button-secondary" data-action="menu"><span class="button-title">Menu</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shown instead of the game if a maze file has a mistake in it. -->
+    <section class="screen" id="screen-maze-error" aria-label="Maze problem">
+      <div class="panel">
+        <h2 class="screen-title">Maze problem</h2>
+        <p>The maze file has a mistake. Fix it, save, and reload the page.</p>
+        <ul class="problem-list" id="problem-list"></ul>
+      </div>
+    </section>
+
+    <!-- Sound and fullscreen buttons (on the menus, not during play). -->
+    <div class="corner-buttons">
+      <button class="icon-button" id="mute-button" aria-label="Mute sound" aria-pressed="false">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="icon-button" id="fullscreen-button" aria-label="Full screen" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <noscript><p class="noscript">Panther Prowl needs JavaScript turned on.</p></noscript>
 </body>
 </html>

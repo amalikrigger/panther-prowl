@@ -1,0 +1,537 @@
+/* =============================================================================
+   Panther Prowl styles
+   The game itself is drawn on the <canvas>. These styles are for the menus,
+   the score display and the arrow pad that sit on top of it.
+   Colors match THEME in config.js (and the other Panther Arcade games).
+   If you change one, change both.
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Creepster';
+  src: url('../assets/fonts/creepster-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fredoka';
+  src: url('../assets/fonts/fredoka-latin-variable.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  --gold: #F6BC1B;
+  --gold-light: #ffe07a;
+  --maroon: #701114;
+  --maroon-dark: #3d0709;
+  --charcoal: #58595B;
+  --night: #12051f;
+  --purple: #3d1466;
+  --purple-light: #7b3fc4;
+  --pumpkin: #ff7a1a;
+  --danger: #ff2d3d;
+  --text: #fff8e7;
+
+  --display-font: 'Creepster', Impact, fantasy;
+  --ui-font: 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+
+  /* Space for phone notches and rounded corners. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Where the maze is on screen. main.js sets these from src/render/layout.js. */
+  --maze-x: 0px;
+  --maze-y: 0px;
+  --maze-w: 100vw;
+  --maze-h: 100vh;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--text);
+  font-family: var(--ui-font);
+  /* Stop the page from scrolling, zooming, selecting text or showing the
+     iOS tap highlight while kids are swiping like mad. */
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  /* 100dvh is the real visible height on phones (not counting the address
+     bar). Older browsers that don't know dvh use 100vh. */
+  height: 100vh;
+  height: 100dvh;
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* The UI layer covers the screen but lets swipes fall through to the canvas.
+   Only the actual buttons and panels catch taps. */
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+[hidden] { display: none !important; }
+
+.gold { color: var(--gold); }
+
+/* --- Screens ---------------------------------------------------------------- */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.94);
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1), visibility 0s linear 0.35s;
+}
+
+.screen.active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1), visibility 0s;
+}
+
+/* Dim the attract-mode game behind the menus so the text stands out. */
+#screen-title.active,
+#screen-pause.active,
+#screen-results.active,
+#screen-maze-error.active {
+  background: radial-gradient(ellipse at center, rgba(18, 5, 31, 0.55), rgba(18, 5, 31, 0.85));
+}
+
+.panel {
+  pointer-events: auto;
+  width: min(92vw, 460px);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 24px 22px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(61, 20, 102, 0.96), rgba(18, 5, 31, 0.97));
+  border: 2px solid rgba(246, 188, 27, 0.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  text-align: center;
+}
+
+.title-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* --- Logo ------------------------------------------------------------------- */
+
+.logo {
+  margin: 0 0 6px;
+  font-family: var(--display-font);
+  font-weight: 400;
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-top,
+.logo-bottom {
+  display: block;
+  color: var(--gold);
+  /* Layered shadows: maroon "3D" edge, then a dark drop shadow. */
+  text-shadow:
+    0 2px 0 var(--maroon),
+    0 4px 0 var(--maroon),
+    0 6px 0 var(--maroon-dark),
+    0 10px 24px rgba(0, 0, 0, 0.7),
+    0 0 40px rgba(246, 188, 27, 0.35);
+}
+
+.logo-top { font-size: clamp(56px, 15vmin, 124px); }
+.logo-bottom {
+  font-size: clamp(68px, 19vmin, 156px);
+  color: var(--pumpkin);
+  transform: rotate(-4deg);
+  animation: logo-bob 3s ease-in-out infinite;
+}
+
+@keyframes logo-bob {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(-2deg) translateY(-4px); }
+}
+
+.tagline {
+  margin: 8px 0 22px;
+  font-size: clamp(16px, 3vmin, 22px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* --- Buttons ---------------------------------------------------------------- */
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px; /* big targets for small fingers */
+  padding: 12px 20px;
+  border-radius: 20px;
+  border: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.button:active { transform: translateY(3px) scale(0.98); }
+.button:focus-visible { outline: 4px solid #fff; outline-offset: 3px; }
+
+.button-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.button-sub {
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.button-primary {
+  color: var(--maroon-dark);
+  background: linear-gradient(180deg, var(--gold-light), var(--gold) 55%, #d99a00);
+  box-shadow: 0 6px 0 #9c6a00, 0 10px 24px rgba(246, 188, 27, 0.35);
+}
+.button-primary:active { box-shadow: 0 3px 0 #9c6a00, 0 6px 16px rgba(246, 188, 27, 0.3); }
+
+.button-secondary {
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(123, 63, 196, 0.9), rgba(61, 20, 102, 0.95));
+  box-shadow: 0 6px 0 #22093d, inset 0 0 0 2px rgba(246, 188, 27, 0.5);
+}
+.button-secondary:active { box-shadow: 0 3px 0 #22093d, inset 0 0 0 2px rgba(246, 188, 27, 0.5); }
+
+.icon-button {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 2px solid rgba(246, 188, 27, 0.6);
+  background: rgba(18, 5, 31, 0.65);
+  color: var(--gold);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.icon-button svg { width: 26px; height: 26px; fill: currentColor; }
+.icon-button:active { transform: scale(0.94); }
+.icon-button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+#mute-button .icon-sound-off { display: none; }
+#mute-button[aria-pressed='true'] .icon-sound-on { display: none; }
+#mute-button[aria-pressed='true'] .icon-sound-off { display: block; }
+
+.corner-buttons {
+  position: absolute;
+  right: calc(12px + var(--safe-right));
+  bottom: calc(12px + var(--safe-bottom));
+  display: flex;
+  gap: 10px;
+  transition: opacity 0.3s ease;
+}
+/* During play they'd get in the way of the arrow pad; mute is under Pause. */
+body[data-screen='playing'] .corner-buttons {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* --- Title extras ------------------------------------------------------------ */
+
+.how-to {
+  margin: 18px auto 0;
+  max-width: 360px;
+  font-size: 16px;
+  line-height: 1.4;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.best-line {
+  margin: 12px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.hint {
+  margin: 10px auto 0;
+  max-width: 320px;
+  font-size: 14px;
+  opacity: 0.85;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* --- HUD -------------------------------------------------------------------- */
+
+/* Top layout: one bar across the top, as wide as the maze. */
+.hud {
+  position: absolute;
+  top: calc(6px + var(--safe-top));
+  left: max(calc(8px + var(--safe-left)), var(--maze-x));
+  width: min(calc(100vw - 16px), var(--maze-w));
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hud-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  text-shadow: 0 3px 0 var(--maroon-dark), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+.hud-score { min-width: 0; }
+.hud-middle { margin: 0 auto; align-items: center; }
+.hud-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+.hud-value {
+  font-size: clamp(26px, 5vmin, 40px);
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  transform-origin: left center;
+}
+.hud-value.bump { animation: bump 0.25s ease-out; }
+@keyframes bump {
+  40% { transform: scale(1.18); }
+}
+.hud-small { font-size: clamp(22px, 4vmin, 32px); color: var(--text); }
+
+.hud-lives { flex-direction: row; gap: 4px; }
+.hud-lives svg { width: 26px; height: 26px; }
+.hud-lives .life { fill: var(--gold); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+
+.hud-pause { width: 46px; height: 46px; flex: none; }
+
+/* Challenge timer, last 10 seconds: red and pulsing (and the number counts
+   down, so it's clear without relying on color). */
+.hud-middle.urgent .hud-value { color: #ffd0d4; animation: pulse 0.5s ease-in-out infinite alternate; }
+@keyframes pulse {
+  to { transform: scale(1.08); }
+}
+
+/* Side layout (phones held sideways): the HUD becomes a column on the left. */
+body[data-layout='side'] .hud {
+  top: calc(12px + var(--safe-top));
+  left: calc(10px + var(--safe-left));
+  width: 132px;
+  height: auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+body[data-layout='side'] .hud-middle { margin: 0; align-items: flex-start; }
+body[data-layout='side'] .hud-pause {
+  position: fixed;
+  top: calc(12px + var(--safe-top));
+  right: calc(12px + var(--safe-right));
+}
+
+/* --- Arrow pad ---------------------------------------------------------------- */
+
+.dpad {
+  position: absolute;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+  touch-action: none;
+  opacity: 0.9;
+}
+.dpad svg { width: 100%; height: 100%; display: block; }
+.dpad-ring {
+  fill: rgba(18, 5, 31, 0.6);
+  stroke: rgba(246, 188, 27, 0.7);
+  stroke-width: 3;
+}
+.dpad-arrow { fill: rgba(246, 188, 27, 0.75); transition: fill 0.08s; }
+.dpad-center { fill: rgba(246, 188, 27, 0.25); }
+.dpad[data-active='up'] [data-dir='up'],
+.dpad[data-active='down'] [data-dir='down'],
+.dpad[data-active='left'] [data-dir='left'],
+.dpad[data-active='right'] [data-dir='right'] { fill: #fff6d6; }
+
+/* The pad only shows while playing. */
+body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
+
+/* --- Banner ("Ready?", "GO!") -------------------------------------------------- */
+
+.banner {
+  position: absolute;
+  left: var(--maze-x);
+  top: var(--maze-y);
+  width: var(--maze-w);
+  height: var(--maze-h);
+  display: grid;
+  place-items: center;
+  font-family: var(--display-font);
+  font-size: clamp(40px, calc(var(--maze-w) * 0.14), 110px);
+  color: var(--pumpkin);
+  text-align: center;
+  line-height: 1;
+  text-shadow: 0 3px 0 var(--maroon), 0 6px 0 var(--maroon-dark), 0 10px 26px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.banner.show { opacity: 1; transform: none; }
+.banner.gold { color: var(--gold); }
+
+/* --- Pause and results ------------------------------------------------------ */
+
+.screen-title {
+  margin: 0 0 6px;
+  font-family: var(--display-font);
+  font-weight: 400;
+  font-size: clamp(48px, 11vmin, 76px);
+  line-height: 1;
+  color: var(--pumpkin);
+  text-shadow: 0 3px 0 var(--maroon), 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+.results-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.results-label {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+.results-value {
+  font-size: clamp(64px, 14vmin, 96px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 4px 0 var(--maroon), 0 8px 20px rgba(0, 0, 0, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+.new-best {
+  margin-top: 8px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--pumpkin);
+  color: var(--maroon-dark);
+  font-weight: 700;
+  animation: pulse 0.6s ease-in-out infinite alternate;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.stats div {
+  padding: 8px 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.stats dt { font-size: 13px; opacity: 0.8; }
+.stats dd { margin: 0; font-size: 24px; font-weight: 700; }
+
+.problem-list {
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.4;
+  padding-left: 20px;
+}
+.problem-list li { margin-bottom: 8px; }
+
+/* --- Loading ---------------------------------------------------------------- */
+
+.loading-text { font-size: 20px; font-weight: 600; }
+
+.noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+/* --- Small and landscape-phone screens -------------------------------------- */
+
+@media (max-height: 500px) {
+  .logo-top { font-size: 14vmin; }
+  .logo-bottom { font-size: 17vmin; }
+  .tagline { margin: 4px 0 10px; }
+  .how-to { margin-top: 8px; font-size: 14px; }
+  .title-panel { width: min(96vw, 560px); }
+  .panel { padding: 14px 18px; }
+  .results-value { font-size: 15vmin; }
+  .stats { margin-bottom: 10px; }
+  .menu { flex-direction: row; max-width: 560px; }
+  .menu .button { flex: 1; }
+}
+
+/* --- Reduced motion ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}

@@ -66,14 +66,14 @@ export class Game {
   }
 
   /** Put everyone back at their start and count down. */
-  startLife() {
+  startLife(readySeconds = TIMING.readySeconds) {
     this.panther.reset();
     for (const ghost of this.ghosts) ghost.reset();
     this.powerLeft = 0;
     this.pounceChain = 0;
     this.moodIndex = 0;
     this.moodLeft = GHOST_MOODS[0]?.seconds ?? Infinity;
-    this.setPhase('ready', TIMING.readySeconds);
+    this.setPhase('ready', readySeconds);
     this.emit('ready');
   }
 
@@ -234,6 +234,12 @@ export class Game {
   }
 
   afterCaught() {
+    if (this.mode === 'challenge') {
+      // No lives in the Challenge: back to the start, with a short countdown.
+      // The clock keeps running, so getting caught costs time.
+      this.startLife(MODES.challenge.respawnReadySeconds);
+      return;
+    }
     this.lives -= 1;
     if (this.lives <= 0) {
       this.endGame('caught');

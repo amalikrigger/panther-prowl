@@ -144,6 +144,12 @@ export const MODES = {
   },
   challenge: {
     roundSeconds: 90, // Boo Bash Challenge length (staff can change it)
+    // Every Challenge starts from the same random seed, so the ghosts make
+    // the same choices for everyone who plays the same way. Fair play!
+    seed: 2026,
+    // No lives in the Challenge: getting caught just costs you time.
+    // This is the shorter countdown after being caught.
+    respawnReadySeconds: 1.2,
   },
 };
 
@@ -173,6 +179,30 @@ export const PRIZE_TIERS = [
   { id: 'gold', name: 'Gold Panther', minScore: 4000, color: '#F6BC1B' },
   { id: 'legendary', name: 'Legendary Panther', minScore: 6000, color: '#c77dff' },
 ];
+
+// -----------------------------------------------------------------------------
+// LEADERBOARD (Boo Bash Challenge, saved on each device)
+// -----------------------------------------------------------------------------
+export const LEADERBOARD = {
+  size: 10, // how many scores to show
+  // Initials that can't be entered. Keep this list short and obvious.
+  // (Same list as the other Panther Arcade games.)
+  blockedInitials: ['ASS', 'FUK', 'FUC', 'FCK', 'SEX', 'KKK', 'DIK', 'DIC', 'CUM', 'TIT', 'FAG', 'NIG', 'XXX', 'WTF', 'POO', 'PEE', 'GAY', 'JIZ', 'COK', 'KOK', 'SHT', 'SHI', 'HOE', 'PUS', 'VAG', 'NAZ'],
+};
+
+// -----------------------------------------------------------------------------
+// STAFF MODE (same as the other Panther Arcade games)
+// -----------------------------------------------------------------------------
+export const STAFF = {
+  // Secret gesture: tap the moon this many times quickly on the title screen.
+  secretTaps: 5,
+  // Default PIN. Change it in staff mode on each booth device before the event.
+  // This repo is public, so everyone can read this one!
+  defaultPin: '1031',
+  // Kiosk mode: after this many idle seconds on a results screen, return to
+  // the title screen.
+  kioskIdleSeconds: 25,
+};
 
 // -----------------------------------------------------------------------------
 // CONTROLS

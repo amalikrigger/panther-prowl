@@ -130,12 +130,18 @@ button {
 #screen-title.active,
 #screen-pause.active,
 #screen-results.active,
+#screen-prize.active,
+#screen-initials.active,
+#screen-leaderboard.active,
+#screen-staff-pin.active,
+#screen-staff.active,
 #screen-maze-error.active {
   background: radial-gradient(ellipse at center, rgba(18, 5, 31, 0.55), rgba(18, 5, 31, 0.85));
 }
 
 .panel {
   pointer-events: auto;
+  touch-action: pan-y; /* long panels (staff settings) can scroll with a finger */
   width: min(92vw, 460px);
   max-height: 100%;
   overflow-y: auto;
@@ -284,8 +290,9 @@ button {
   gap: 10px;
   transition: opacity 0.3s ease;
 }
-/* During play they'd get in the way of the arrow pad; mute is under Pause. */
-body[data-screen='playing'] .corner-buttons {
+/* Only on the title and pause screens: anywhere else they'd sit on top of
+   the arrow pad or a panel's buttons. */
+body:not([data-screen='title']):not([data-screen='pause']) .corner-buttons {
   opacity: 0;
   visibility: hidden;
 }
@@ -499,6 +506,243 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
 }
 .problem-list li { margin-bottom: 8px; }
 
+/* --- Title extras: high scores link ------------------------------------------ */
+
+.link-button {
+  margin: 14px auto 0;
+  padding: 10px 18px;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(18, 5, 31, 0.6);
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 17px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.link-button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.screen-title.small { font-size: clamp(36px, 8vmin, 52px); }
+
+.menu-row { flex-direction: row; }
+.menu-row .button { flex: 1; }
+
+/* --- Prize screen ------------------------------------------------------------- */
+
+.prize-panel { --tier-color: var(--gold); }
+
+.prize-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.live-clock { display: inline-flex; align-items: center; gap: 6px; }
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4cff7a;
+  box-shadow: 0 0 8px #4cff7a;
+  animation: live 1s ease-in-out infinite;
+}
+@keyframes live {
+  50% { opacity: 0.25; }
+}
+
+.prize-badge {
+  position: relative;
+  width: min(46vmin, 190px);
+  aspect-ratio: 1;
+  margin: 4px auto 0;
+  animation: badge-in 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.prize-badge svg { position: relative; width: 100%; height: 100%; display: block; }
+.prize-badge .medal { fill: var(--tier-color); stroke: rgba(0, 0, 0, 0.35); stroke-width: 2; }
+.prize-badge .medal-ring { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.prize-badge .medal-paw { fill: rgba(61, 7, 9, 0.75); }
+.prize-badge .ribbon { fill: var(--maroon); }
+/* Light rays spinning behind the medal. */
+.prize-rays {
+  position: absolute;
+  inset: -18%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tier-color) 55%, transparent) 0deg 10deg, transparent 10deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 35%, transparent 70%);
+  mask: radial-gradient(circle, #000 35%, transparent 70%);
+  animation: spin 8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes badge-in {
+  from { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+}
+
+.prize-tier {
+  margin: 4px 0 8px;
+  font-family: var(--display-font);
+  font-weight: 400;
+  font-size: clamp(40px, 9vmin, 64px);
+  line-height: 1;
+  color: var(--tier-color);
+  text-shadow: 0 3px 0 var(--maroon-dark), 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+.no-tier .prize-tier { color: var(--text); font-size: clamp(30px, 7vmin, 44px); }
+
+.prize-note { margin: 0 0 10px; font-size: 17px; line-height: 1.35; }
+
+.prize-code {
+  margin: 0 0 14px;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.prize-code strong {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  background: #fff8e7;
+  color: var(--maroon-dark);
+  font-size: 30px;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Initials ----------------------------------------------------------------- */
+
+.initials-prompt { margin: 0 0 10px; font-size: 18px; }
+.initials-slots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.initials-slots span {
+  width: 64px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 3px solid rgba(246, 188, 27, 0.5);
+  background: rgba(18, 5, 31, 0.7);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.initials-slots span.current { border-color: #fff; animation: pulse 0.6s ease-in-out infinite alternate; }
+.initials-error { min-height: 22px; margin: 0 0 6px; color: #ffb3b9; font-weight: 600; }
+
+.letter-keypad,
+.pin-keypad {
+  display: grid;
+  gap: 6px;
+  margin: 0 auto 14px;
+}
+.letter-keypad { grid-template-columns: repeat(7, 1fr); max-width: 420px; }
+.pin-keypad { grid-template-columns: repeat(3, 1fr); max-width: 260px; }
+.key {
+  min-height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(123, 63, 196, 0.85);
+  box-shadow: 0 4px 0 #22093d;
+  font-size: 22px;
+  font-weight: 700;
+}
+.key:active { transform: translateY(2px); box-shadow: 0 2px 0 #22093d; }
+.key:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.pin-keypad .key { min-height: 60px; font-size: 26px; }
+.pin-dots { min-height: 44px; font-size: 32px; letter-spacing: 0.3em; color: var(--gold); }
+
+/* --- Leaderboard -------------------------------------------------------------- */
+
+.board-sub { margin: 0 0 10px; opacity: 0.85; }
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tab {
+  min-height: 44px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(246, 188, 27, 0.6);
+  background: transparent;
+  font-weight: 600;
+  font-size: 17px;
+}
+.tab[aria-selected='true'] { background: var(--gold); color: var(--maroon-dark); }
+.board {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.board li {
+  display: grid;
+  grid-template-columns: 2.2em 1fr auto;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 10px;
+}
+.board li:nth-child(odd) { background: rgba(255, 255, 255, 0.06); }
+.board li:first-child .initials, .board li:first-child .score { color: var(--gold); }
+.board li.mine { background: var(--pumpkin); color: var(--maroon-dark); animation: pulse 0.7s ease-in-out 3 alternate; }
+.board li.mine .initials, .board li.mine .score { color: var(--maroon-dark); }
+.board .rank { opacity: 0.7; text-align: left; }
+.board .initials { font-weight: 700; letter-spacing: 0.15em; text-align: left; }
+.board .score { font-weight: 700; }
+.board .board-empty { display: block; text-align: center; opacity: 0.8; }
+
+/* --- Staff -------------------------------------------------------------------- */
+
+.staff-panel { width: min(94vw, 560px); text-align: left; }
+.staff-panel .screen-title { text-align: center; }
+.staff-panel fieldset {
+  margin: 0 0 14px;
+  padding: 10px 14px 12px;
+  border: 1px solid rgba(246, 188, 27, 0.45);
+  border-radius: 14px;
+}
+.staff-panel legend { padding: 0 6px; color: var(--gold); font-weight: 700; }
+.staff-panel label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.staff-panel label.check { gap: 10px; }
+.staff-panel input,
+.staff-panel select {
+  font: inherit;
+  min-height: 40px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 2px solid rgba(246, 188, 27, 0.5);
+  background: rgba(18, 5, 31, 0.8);
+  color: var(--text);
+  /* The page turns off text selection and touch gestures for the game;
+     form fields need them back. */
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: auto;
+}
+.staff-panel input[type='checkbox'] { width: 24px; height: 24px; min-height: 0; accent-color: var(--gold); }
+.staff-panel input[type='number'] { width: 110px; }
+.staff-help { margin: 4px 0 0; font-size: 14px; opacity: 0.8; }
+.staff-warning { padding: 8px 12px; border-radius: 10px; background: var(--danger); font-weight: 600; }
+.tier-swatch { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+.tier-inputs label { flex-wrap: nowrap; }
+.tier-inputs input[type='number'] { width: 96px; flex: none; }
+.tier-name { flex: 1; min-width: 0; }
+.staff-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.button.small { min-height: 48px; padding: 8px 14px; font-size: 16px; font-weight: 600; }
+.staff-check-result { min-height: 22px; font-weight: 600; color: var(--gold-light); }
+.prize-log { font-size: 14px; max-height: 220px; overflow-y: auto; padding-left: 22px; font-variant-numeric: tabular-nums; }
+.staff-panel details summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; }
+
 /* --- Loading ---------------------------------------------------------------- */
 
 .loading-text { font-size: 20px; font-weight: 600; }
@@ -524,6 +768,40 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
   .stats { margin-bottom: 10px; }
   .menu { flex-direction: row; max-width: 560px; }
   .menu .button { flex: 1; }
+  /* Prize screen side by side: medal and tier on the left, the rest on the right. */
+  .prize-panel {
+    width: min(96vw, 720px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'meta meta'
+      'badge score'
+      'tier note'
+      'tier code'
+      'tier menu';
+    column-gap: 18px;
+    align-items: center;
+  }
+  .prize-meta { grid-area: meta; }
+  .prize-badge { grid-area: badge; width: 30vmin; }
+  .prize-tier { grid-area: tier; align-self: start; font-size: 10vmin; }
+  .prize-panel .results-score { grid-area: score; margin: 0; }
+  .prize-note { grid-area: note; font-size: 15px; }
+  .prize-code { grid-area: code; margin-bottom: 8px; }
+  .prize-panel .menu { grid-area: menu; }
+
+  /* Initials: a compact two-row keypad. */
+  .initials-panel { width: min(96vw, 720px); }
+  .initials-prompt { display: none; }
+  .initials-panel .screen-title { font-size: 9vmin; }
+  .letter-keypad { grid-template-columns: repeat(14, 1fr); max-width: 680px; gap: 5px; margin-bottom: 10px; }
+  .key { min-height: 44px; font-size: 18px; }
+  .initials-slots span { width: 52px; height: 52px; font-size: 32px; }
+  .initials-error { min-height: 18px; margin: 0; }
+  .board-panel { width: min(96vw, 720px); }
+  .board-panel .screen-title { font-size: 9vmin; }
+  .board { font-size: 18px; columns: 2; column-gap: 12px; }
+  .board li { break-inside: avoid; }
 }
 
 /* --- Reduced motion ---------------------------------------------------------- */

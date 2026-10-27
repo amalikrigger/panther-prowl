@@ -3,7 +3,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const SCREENS = ['loading', 'title', 'pause', 'results', 'maze-error'];
+const SCREENS = ['loading', 'title', 'pause', 'results', 'prize', 'initials', 'leaderboard', 'staff-pin', 'staff', 'maze-error'];
 
 /** Show one screen and hide the others. 'playing' hides them all. */
 export function showScreen(name) {

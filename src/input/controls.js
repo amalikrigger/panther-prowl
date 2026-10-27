@@ -23,7 +23,7 @@ export class Controls {
   /**
    * @param swipeSurface  the element swipes are read from (the game canvas)
    * @param dpad          the arrow pad element (or null)
-   * @param handlers      { direction(dir), pause(), mute(), anyInput() }
+   * @param handlers      { direction(dir), pause(), mute(), anyInput(), isTyping() }
    */
   constructor({ swipeSurface, dpad, handlers }) {
     this.handlers = handlers;
@@ -47,6 +47,7 @@ export class Controls {
   listenToKeyboard() {
     window.addEventListener('keydown', (event) => {
       this.handlers.anyInput?.();
+      if (this.handlers.isTyping?.()) return; // typing initials or a PIN, not playing
       const direction = KEY_DIRECTIONS[event.code];
       if (direction) {
         event.preventDefault(); // stop arrow keys scrolling the page

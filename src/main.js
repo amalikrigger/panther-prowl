@@ -4,10 +4,12 @@
 // code (src/render/). It sets things up, runs the loop, switches screens, and
 // turns game events ("candy", "pounce", "caught"...) into sounds and effects.
 
-import { MAZES, CONTROLS, THEME, GHOSTS } from './config.js';
+import { MAZES, MODES, CONTROLS, THEME, GHOSTS, STAFF } from './config.js';
 import { Maze } from './core/maze.js';
 import { Game } from './core/game.js';
 import { autopilotDirection } from './core/autopilot.js';
+import { tierFor, verificationCode } from './core/prizes.js';
+import { boardKey, qualifies, topScores, dayOf } from './core/leaderboard.js';
 import { MAZE_SOURCES } from './mazes/index.js';
 import { computeLayout } from './render/layout.js';
 import { Renderer } from './render/renderer.js';
@@ -16,9 +18,15 @@ import { Controls } from './input/controls.js';
 import { startLoop } from './engine/loop.js';
 import { unlock, setMuted, isMuted, sounds } from './audio/sound.js';
 import { load, save } from './storage/store.js';
+import { loadSettings, saveSettings, loadLeaderboard, addToLeaderboard, resetLeaderboard, nextPlayNumber, loadPrizeLog, logPrize } from './storage/booth.js';
 import { showScreen, showBanner, hideBanner, showResults, showMazeProblems } from './ui/screens.js';
 import { Hud } from './ui/hud.js';
 import { setupFullscreen } from './ui/fullscreen.js';
+import { showPrize, stopPrizeClock } from './ui/prize.js';
+import { askForInitials, handleInitialsKey, submitInitials, skipInitials } from './ui/initials.js';
+import { showLeaderboard } from './ui/leaderboard.js';
+import { askForPin, handlePinKey, submitPin, openStaffPanel, confirmTwice, showStaffMessage } from './ui/staff.js';
+import { moonCircle } from './render/scene.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -46,6 +54,9 @@ let game = null;        // the game being played
 let attract = null;     // the demo game behind the title screen
 let gameOverAt = null;  // when the current game ended (results appear shortly after)
 let layout = null;
+let settings = loadSettings(); // staff settings for this device (src/storage/booth.js)
+let lastInputAt = performance.now(); // for kiosk mode: when someone last touched anything
+let challengeResult = null; // the finished Challenge, between the prize screen and the leaderboard
 
 const controls = new Controls({
   swipeSurface: canvas,
@@ -55,6 +66,8 @@ const controls = new Controls({
     pause: () => (screen === 'playing' ? pause() : screen === 'pause' ? resume() : null),
     mute: toggleMute,
     anyInput: unlock, // phones only allow sound after the first touch
+    // While someone types initials or a PIN, letter keys aren't shortcuts.
+    isTyping: () => ['initials', 'staff-pin', 'staff'].includes(screen),
   },
 });
 
@@ -112,7 +125,13 @@ window.addEventListener('pointerdown', (event) => {
 
 function startGame(mode) {
   unlock();
-  game = new Game({ maze: classicMaze, mode, seed: Date.now() % 100000 });
+  stopPrizeClock();
+  if (mode === 'challenge') {
+    // Same maze, same seed, same length for every paid play.
+    game = new Game({ maze: challengeMaze(), mode, seed: MODES.challenge.seed, roundSeconds: settings.roundSeconds });
+  } else {
+    game = new Game({ maze: classicMaze, mode, seed: Date.now() % 100000 });
+  }
   gameOverAt = null;
   effects.clear();
   hud.reset();
@@ -137,16 +156,23 @@ function resume() {
 
 function goToTitle() {
   game = null;
+  challengeResult = null;
   controls.enabled = false;
+  stopPrizeClock();
   hideBanner();
   effects.clear();
   startAttract();
-  updateBestLine();
+  relayout();
+  updateTitle();
   screen = 'title';
   showScreen('title');
 }
 
 function finishGame() {
+  if (game.mode === 'challenge') {
+    finishChallenge();
+    return;
+  }
   const key = `best.${game.mode}`;
   const best = load(key, 0);
   const isNewBest = game.score > best;
@@ -165,10 +191,161 @@ function finishGame() {
   });
 }
 
-function updateBestLine() {
+function updateTitle() {
+  $('challenge-sub').textContent = `${settings.roundSeconds} seconds · ${settings.prizeStation ? 'win prizes!' : 'beat the high scores'}`;
+
+  const lines = [];
+  const [tonight] = topScores(loadLeaderboard(), { board: currentBoard(), day: dayOf(), size: 1 });
+  if (tonight) lines.push(`Tonight's best: <span class="gold">${tonight.initials} ${tonight.score.toLocaleString()}</span>`);
   const best = load('best.classic', 0);
-  $('best-line').innerHTML = best > 0 ? `Best on this device: <span class="gold">${best.toLocaleString()}</span>` : '';
+  if (best > 0) lines.push(`Classic best: <span class="gold">${best.toLocaleString()}</span>`);
+  $('best-line').innerHTML = lines.join(' · ');
 }
+
+// -----------------------------------------------------------------------------
+// The Boo Bash Challenge: prize screen → initials → leaderboard
+// -----------------------------------------------------------------------------
+
+function challengeMaze() {
+  const maze = mazes[settings.challengeMaze];
+  return maze && !maze.hasErrors ? maze : classicMaze;
+}
+
+/** The leaderboard for the current Challenge settings. */
+function currentBoard() {
+  return boardKey({ mazeId: challengeMaze().id, roundSeconds: settings.roundSeconds });
+}
+
+function finishChallenge() {
+  controls.enabled = false;
+  const { score } = game;
+  const tiers = [...settings.tiers].sort((a, b) => a.minScore - b.minScore);
+  const tier = tierFor(score, tiers);
+  const nextTier = tiers.find((t) => t.minScore > score) ?? null;
+  const day = dayOf();
+  const board = currentBoard();
+
+  // Prize stations number every play and log it, prize or not, so staff can
+  // check any claim later in staff mode.
+  let station = null;
+  if (settings.prizeStation) {
+    const playNumber = nextPlayNumber();
+    const code = tier ? verificationCode(settings.stationSecret, { day, playNumber, score, tierId: tier.id }) : null;
+    station = { name: settings.stationName, playNumber, code };
+    const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    logPrize({ playNumber, day, time, score, tierId: tier?.id ?? null, tierName: tier?.name ?? null, code });
+  }
+
+  challengeResult = { score, day, board, qualifies: qualifies(loadLeaderboard(), score, { board, day }) };
+  screen = 'prize';
+  showPrize({ score, tier, nextTier, station });
+  if (tier) sounds.cleared();
+}
+
+function continueAfterPrize() {
+  stopPrizeClock();
+  if (challengeResult?.qualifies) {
+    screen = 'initials';
+    askForInitials((initials) => {
+      let added = null;
+      if (initials) {
+        const entries = addToLeaderboard({ initials, score: challengeResult.score, day: challengeResult.day, board: challengeResult.board });
+        added = entries.reduce((latest, e) => (e.order > (latest?.order ?? 0) ? e : latest), null);
+      }
+      openLeaderboard({ highlight: added });
+    });
+  } else {
+    openLeaderboard();
+  }
+}
+
+function openLeaderboard({ highlight = null, attract: isAttract = false } = {}) {
+  screen = isAttract ? 'leaderboard-attract' : 'leaderboard';
+  showLeaderboard({
+    entries: loadLeaderboard(),
+    board: currentBoard(),
+    day: dayOf(),
+    subtitle: `${challengeMaze().name} · ${settings.roundSeconds}-second Challenge`,
+    highlight,
+    attract: isAttract,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Staff mode: tap the moon 5 times on the title screen, then the PIN.
+// -----------------------------------------------------------------------------
+
+let moonTaps = [];
+
+canvas.addEventListener('pointerdown', (event) => {
+  if (screen !== 'title' || !layout) return;
+  const moon = moonCircle(layout);
+  if (Math.hypot(event.clientX - moon.x, event.clientY - moon.y) > moon.radius) return;
+  const now = performance.now();
+  moonTaps = [...moonTaps.filter((t) => now - t < 3000), now];
+  if (moonTaps.length >= STAFF.secretTaps) {
+    moonTaps = [];
+    openStaff();
+  }
+});
+
+function openStaff() {
+  screen = 'staff-pin';
+  askForPin((pin) => {
+    if (pin !== settings.pin) return false;
+    screen = 'staff';
+    openStaffPanel({
+      settings,
+      mazes,
+      prizeLog: loadPrizeLog(),
+      save: (updated) => {
+        settings = updated;
+        saveSettings(settings);
+        goToTitle();
+      },
+    });
+    return true;
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Kiosk mode: nobody touching anything? Go back to the title. And while the
+// title sits idle, take turns showing the high scores to draw people in.
+// -----------------------------------------------------------------------------
+
+const KIOSK_TITLE_SECONDS = 20;     // title, then...
+const KIOSK_BOARD_SECONDS = 10;     // ...high scores, then title again
+// (Includes 'pause': a game someone paused and walked away from.)
+const kioskScreens = ['results', 'prize', 'initials', 'leaderboard', 'pause'];
+
+function updateKiosk() {
+  if (!settings.kiosk) return;
+  const idle = (performance.now() - lastInputAt) / 1000;
+  if (kioskScreens.includes(screen) && idle > settings.kioskIdleSeconds) {
+    lastInputAt = performance.now();
+    goToTitle();
+  } else if (screen === 'title' && idle > KIOSK_TITLE_SECONDS) {
+    lastInputAt = performance.now();
+    openLeaderboard({ attract: true });
+  } else if (screen === 'leaderboard-attract' && idle > KIOSK_BOARD_SECONDS) {
+    lastInputAt = performance.now();
+    goToTitle();
+  }
+}
+
+const noteInput = () => {
+  lastInputAt = performance.now();
+  // Any touch on the attract-mode high scores goes back to the title.
+  if (screen === 'leaderboard-attract') goToTitle();
+};
+window.addEventListener('pointerdown', noteInput, true);
+window.addEventListener('keydown', noteInput, true);
+
+// Typing on the initials and PIN screens.
+window.addEventListener('keydown', (event) => {
+  if (screen === 'initials') handleInitialsKey(event);
+  else if (screen === 'staff-pin') handlePinKey(event);
+});
 
 function toggleMute() {
   setMuted(!isMuted());
@@ -268,9 +445,10 @@ function frame(dt, time) {
     handleEvents(game.takeEvents());
     // Give the caught animation a moment before the results slide in.
     if (gameOverAt && performance.now() - gameOverAt > 900) finishGame();
-  } else if (screen === 'title' && attract) {
+  } else if ((screen === 'title' || screen === 'leaderboard-attract') && attract) {
     updateAttract(dt);
   }
+  updateKiosk();
 
   if (screen !== 'pause') effects.update(dt);
   const shown = game ?? attract;
@@ -290,11 +468,29 @@ document.addEventListener('click', (event) => {
   unlock();
   sounds.tap();
   switch (button.dataset.action) {
+    case 'play-challenge': startGame('challenge'); break;
     case 'play-classic': startGame('classic'); break;
     case 'play-again': startGame(game?.mode ?? 'classic'); break;
     case 'resume': resume(); break;
     case 'quit':
     case 'menu': goToTitle(); break;
+    case 'show-leaderboard': openLeaderboard(); break;
+    case 'prize-continue': continueAfterPrize(); break;
+    case 'initials-done': submitInitials(); break;
+    case 'initials-skip': skipInitials(); break;
+    case 'pin-enter': submitPin(); break;
+    case 'staff-reset-tonight':
+      if (confirmTwice(button)) {
+        resetLeaderboard({ day: dayOf() });
+        showStaffMessage("Tonight's scores erased.");
+      }
+      break;
+    case 'staff-reset-all':
+      if (confirmTwice(button)) {
+        resetLeaderboard();
+        showStaffMessage('All scores erased.');
+      }
+      break;
   }
 });
 

@@ -51,9 +51,7 @@ function drawSky(ctx, { width, height }) {
   ctx.globalAlpha = 1;
 
   // A huge harvest moon peeking out from the top-right corner.
-  const radius = Math.max(width, height) * 0.22;
-  const moonX = width - radius * 0.35;
-  const moonY = radius * 0.3;
+  const { x: moonX, y: moonY, radius } = moonCircle({ width, height });
   const halo = ctx.createRadialGradient(moonX, moonY, radius * 0.8, moonX, moonY, radius * 1.8);
   halo.addColorStop(0, 'rgba(255, 215, 94, 0.25)');
   halo.addColorStop(1, 'rgba(255, 215, 94, 0)');
@@ -66,6 +64,12 @@ function drawSky(ctx, { width, height }) {
   ctx.beginPath();
   ctx.arc(moonX, moonY, radius, 0, Math.PI * 2);
   ctx.fill();
+}
+
+/** Where the moon is, in CSS pixels. Staff mode starts by tapping it. */
+export function moonCircle({ width, height }) {
+  const radius = Math.max(width, height) * 0.22;
+  return { x: width - radius * 0.35, y: radius * 0.3, radius };
 }
 
 function drawFloor(ctx, maze) {

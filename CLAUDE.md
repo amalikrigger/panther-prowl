@@ -16,7 +16,7 @@ codebase**.
 ## Panther Arcade
 
 Panther Prowl is one of three sibling games: Panther Slash
-(`~/Developer/panther-slash`) and Panther Pounce (`~/Developer/panther-pounce`).
+(`~/Developer/WebstormProjects/panther-slash`) and Panther Pounce (`~/Developer/WebstormProjects/panther-pounce`).
 Keep these consistent across them:
 - color tokens and fonts
 - prize-tier names (Bronze / Silver / Gold / Legendary Panther)

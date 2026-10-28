@@ -16,8 +16,8 @@ You are taking over **Panther Prowl**, a browser maze-chase game we are rebuildi
 ## 2. The Panther Arcade (sibling games)
 
 Panther Prowl is one of three Boo Bash games being rebuilt in parallel from the same brief:
-- **Panther Slash**: a slicing game (`~/Developer/panther-slash`, github.com/amalikrigger/panther-slash).
-- **Panther Pounce**: a slingshot game (`~/Developer/panther-pounce`, github.com/amalikrigger/panther-pounce).
+- **Panther Slash**: a slicing game (`~/Developer/WebstormProjects/panther-slash`, github.com/amalikrigger/panther-slash).
+- **Panther Pounce**: a slingshot game (`~/Developer/WebstormProjects/panther-pounce`, github.com/amalikrigger/panther-pounce).
 - **Panther Prowl**: this repo, the maze game.
 
 Players should feel they're playing one arcade. Keep these consistent across the three games:

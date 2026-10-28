@@ -45,14 +45,14 @@ the Web Audio API in `src/audio/sound.js`. There are no sound files.
 |---|---|---|
 | *(none yet)* | | |
 
-## Legacy files (to be removed)
+## Removed legacy files
 
 The project started from a copy of an "HTML5 Pacman" game: `pacman.js`,
-`nipplejs.min.js`, `audio/*.mp3` and `Cartoon.ttf`. **Panther Prowl doesn't use
-any of them.**
-- The code, the sounds and the original maze are derived from Bandai Namco's
+`nipplejs.min.js`, `audio/*.mp3` and `Cartoon.ttf`. Panther Prowl never used
+them, and they were deleted on Oct 28, 2026:
+- The code, the sounds and the original maze were derived from Bandai Namco's
   *Pac-Man*.
-- The font's license is unknown.
-- nipplejs is MIT-licensed but no longer needed.
+- The font's license was unknown.
+- nipplejs is MIT-licensed but was no longer needed.
 
-These files are scheduled for deletion.
+They remain in the git history from before that date.

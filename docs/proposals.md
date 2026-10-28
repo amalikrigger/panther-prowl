@@ -16,7 +16,7 @@ Nothing in this file has been built or deployed. Each item needs a yes first.
    - `assets/fonts/`, `assets/icons/`, `assets/characters/` (if any),
      `assets/CREDITS.md`
 
-   Leave out `tests/`, `docs/` and the legacy Pac-Man files.
+   Leave out `tests/` and `docs/`.
 2. Add a Panther Prowl card to `projects.html`, the same way the other games
    have one.
 3. Commit and push `think_in_bits` (that's the deploy).

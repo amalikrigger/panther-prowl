@@ -150,8 +150,7 @@ same way for all three games.
     hidden; reduced motion
   - holds 60 fps under a 4× CPU throttle
   - `node --test` 26/26, and a 40-seed soak run with no stuck ghosts
-  **Waiting on Amali:** checkpoint review, commit approval, and approval to
-  delete the legacy Pac-Man files.
+  Committed. The legacy Pac-Man files were deleted Oct 28, with approval.
 - [x] Phase 2: built and verified Oct 27 (headless Chrome at 1280×800,
   390×844, 844×390, 360×640 and 1024×768).
   - Full flow: staff gesture → PIN → prize station → Challenge → prize screen
@@ -159,7 +158,7 @@ same way for all three games.
     leaderboard with highlight → kiosk return.
   - On a non-station device: no code, nothing logged.
   - `node --test` 40/40.
-  **Waiting on Amali:** checkpoint review and commit approval.
+  Committed.
 - [x] Phase 3: built and verified Oct 27.
   - Offline: a network-first service worker caches 44 files, and the
     manifest and icons support "Add to Home Screen". Tested by loading once,
@@ -169,8 +168,8 @@ same way for all three games.
   - Polish: lit classroom windows, a Panther Power border, and Challenge
     countdown ticks plus a "Time's up!" banner.
   - Holds 60 fps at a 6× CPU throttle at 1024×768@2×; `node --test` 46/46.
-  **Waiting on Amali:** checkpoint review and commit approval.
-- [ ] Phase 4, event hardening (Oct 28), in progress:
+  Committed.
+- [x] Phase 4, event hardening (Oct 28):
   - [x] Older-browser fixes. The floor is now iPadOS 14 and Chrome 87:
     - removed `.at()` and `??=`
     - added `inset` and `aspect-ratio` fallbacks
@@ -191,8 +190,7 @@ same way for all three games.
     - The service worker didn't fall back to its saved copy on server errors.
     - Two cosmetic issues.
 
-    `node --test` 48/48 (2 new regression tests).
-    **Waiting on Amali:** commit approval.
+    `node --test` 48/48 (2 new regression tests). Committed Oct 28.
 - [ ] Rehearsal on real booth devices (Thu Oct 29 afternoon), using the
   checklist in `docs/booth-guide.md`
 - Score calibration so far (90 s round): steering at random scores about

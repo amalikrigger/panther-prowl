@@ -1,8 +1,15 @@
-# Proposals awaiting Amali's approval
+# Proposals
 
-Nothing in this file has been built or deployed. Each item needs a yes first.
+Each item needs Amali's yes first. Item 1 was approved on Oct 28; items 2 and
+3 are not built.
 
-## 1. Put Panther Prowl on thinkinbits.site
+## 1. Put Panther Prowl on thinkinbits.site (approved Oct 28)
+
+**Status:** exported with `tools/export.sh`, and the card was added to the
+`project-grid.html` template, then `projects.html` was rebuilt. Committed in
+`think_in_bits` (e407f7b), and live once that commit is pushed. To update
+the site later: run `tools/export.sh <site repo>`, then commit and push the
+site.
 
 **How the site works today:** `think_in_bits` is a static GitHub Pages site
 (`CNAME` → www.thinkinbits.site). Each game lives in its own folder,

@@ -191,6 +191,10 @@ same way for all three games.
     - Two cosmetic issues.
 
     `node --test` 48/48 (2 new regression tests). Committed Oct 28.
+- [ ] Deploy to www.thinkinbits.site/projects/panther-prowl/ (approved Oct 28):
+  exported, card added, committed in `think_in_bits` and tested from a
+  local server of the site (card, game, offline). **Waiting on:** Amali to
+  push `think_in_bits`.
 - [ ] Rehearsal on real booth devices (Thu Oct 29 afternoon), using the
   checklist in `docs/booth-guide.md`
 - Score calibration so far (90 s round): steering at random scores about

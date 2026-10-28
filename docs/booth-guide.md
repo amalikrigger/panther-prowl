@@ -7,7 +7,9 @@ For whoever sets up the Panther Prowl booth and the volunteers running it.
 1. **Open the game** in Chrome (or Safari on an iPad).
    - At the booth, the game must already be loaded. Event Wi-Fi is unreliable,
      so don't count on loading it there.
-   - Hosted on thinkinbits.site: open it once while you still have internet.
+   - Hosted on thinkinbits.site: open
+     `https://www.thinkinbits.site/projects/panther-prowl/` once while you
+     still have internet.
    - Running from a laptop: start the local server (see the README) and open
      `http://localhost:8000`.
 2. **Open staff mode:** on the title screen, tap the **moon** (top-right

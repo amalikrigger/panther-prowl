@@ -107,6 +107,7 @@ src/
   styles.css          how the menus look
 assets/               fonts, icons (and credits for everything)
 tests/                tests for the game rules
+tools/export.sh       copies the game into the website
 docs/                 the project plan, booth guide and student tasks
 ```
 
@@ -207,6 +208,18 @@ node --test
 Run them after you change anything in `src/core/` or a maze. They also check
 that every maze in `src/mazes/` is valid, and that `sw.js` lists every file
 the game needs to work offline.
+
+## Put it on the website
+
+The game is published at www.thinkinbits.site/projects/panther-prowl/. To
+update that copy, run the export script (it runs the tests first), then
+commit and push the website repo:
+
+```bash
+tools/export.sh ~/Developer/WebstormProjects/think_in_bits
+```
+
+Only your teacher pushes the website.
 
 ## Student git workflow
 

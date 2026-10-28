@@ -59,3 +59,45 @@ Challenge play on this device.
   and check the mute button on the title screen.
 - **A kid walked away mid-game:** in kiosk mode the game returns to the title
   by itself.
+
+## Rehearsal checklist (30 minutes, on the real booth devices)
+
+Do this on **each** booth device before the event. Write down anything
+that fails and tell Amali (or note it in `docs/plan.md`).
+
+**Loading and offline**
+- [ ] The game opens and the title screen shows the dripping "Panther Prowl" logo.
+- [ ] Turn Wi-Fi **off**, reload: the game still opens and plays. (Load it
+      once with Wi-Fi first.)
+- [ ] Fullscreen works (or, on an iPad, the home-screen icon opens it fullscreen).
+
+**Controls (try each one the device has)**
+- [ ] Arrow keys and WASD move the panther.
+- [ ] Swiping on the maze turns the panther.
+- [ ] The round arrow pad works, both tapping and holding.
+- [ ] Pressing a turn a moment early still turns at the corner.
+- [ ] No page scrolling, zooming or pop-up menus while playing.
+
+**Sound**
+- [ ] After the first tap, you hear the "Ready?" tune, candy crunches and the
+      power growl.
+- [ ] The mute button works.
+
+**Booth flow**
+- [ ] Staff mode opens with the moon taps and your new PIN. The default PIN
+      no longer works.
+- [ ] A full 90-second Challenge round ends on the prize screen, with the
+      station name, play number, ticking clock and code.
+- [ ] Initials entry works, and the score shows on High Scores → Tonight.
+- [ ] Leave it alone: kiosk mode goes back to the title, then shows the high
+      scores.
+- [ ] Turn the device sideways and back during a game: the layout adjusts and
+      play continues.
+
+**Fairness check (the important one)**
+- [ ] Have 3–5 kids (or adults playing like kids) play one Challenge each.
+      Write down their scores.
+- [ ] Set the prize thresholds in staff mode so roughly half of players win
+      Bronze, a few win Silver, and Gold and Legendary are rare. Match them to
+      the real prizes you have.
+- [ ] Erase tonight's scores (staff mode) when you're done practicing.

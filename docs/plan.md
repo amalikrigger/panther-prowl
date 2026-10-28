@@ -170,7 +170,31 @@ same way for all three games.
     countdown ticks plus a "Time's up!" banner.
   - Holds 60 fps at a 6× CPU throttle at 1024×768@2×; `node --test` 46/46.
   **Waiting on Amali:** checkpoint review and commit approval.
-- [ ] Rehearsal on real booth devices (Thu Oct 29 afternoon)
+- [ ] Phase 4, event hardening (Oct 28), in progress:
+  - [x] Older-browser fixes. The floor is now iPadOS 14 and Chrome 87:
+    - removed `.at()` and `??=`
+    - added `inset` and `aspect-ratio` fallbacks
+    - a "browser too old" message, and a load-failure message after 12 s
+  - [x] Rehearsal checklist in `docs/booth-guide.md`
+  - [x] Proposals for deploy, online leaderboard and arcade shell in
+    `docs/proposals.md` (not built)
+  - [x] Independent bug review of the branch, then fixes. Fixed:
+    - **Pounced ghost eyes could circle forever in Haunted Halls** (62 of
+      502 start positions). The eyes now follow a breadth-first-search
+      "steps home" map, which fixes all 502.
+    - A staff save could set the round length to 0.
+    - One error could freeze the game loop.
+    - A stray Enter could skip the prize screen.
+    - Focus and double-taps could leak between screens.
+    - The kiosk didn't time out the staff screens.
+    - Getting caught on the last candy cost a life.
+    - The service worker didn't fall back to its saved copy on server errors.
+    - Two cosmetic issues.
+
+    `node --test` 48/48 (2 new regression tests).
+    **Waiting on Amali:** commit approval.
+- [ ] Rehearsal on real booth devices (Thu Oct 29 afternoon), using the
+  checklist in `docs/booth-guide.md`
 - Score calibration so far (90 s round): steering at random scores about
   1,250, and the autopilot scores a median of about 6,000. Placeholder tiers
   are set at 1,500 / 2,500 / 4,000 / 6,000.

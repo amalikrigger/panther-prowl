@@ -67,6 +67,8 @@ shared code dependency.
   - Everything is drawn in code in `render/art.js`.
 - Menus and the HUD are an HTML overlay. `#ui` has `pointer-events: none`, so
   swipes reach the canvas.
+- Offline: `sw.js` is network-first with a cache fallback. Every shipped file
+  must be in its `FILES` list; `tests/offline.test.mjs` enforces this.
 
 ## Verifying changes
 

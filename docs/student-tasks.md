@@ -23,8 +23,9 @@ follow the git workflow in the README. Each one is small enough for one class.
   drawing it with code in `src/render/art.js` (start by copying `drawWitchHat`).
   Drawing with code is just shapes: circles (`arc`, `ellipse`), lines
   (`lineTo`) and curves (`quadraticCurveTo`).
-- **Draw a bonus treat** (a candy apple, a full-size candy bar) for a future
-  "bonus treat" feature.
+- **Draw a character as a PNG** and put it in the game: a new panther, a
+  ghost, or a bonus treat. The README section "Draw your own character" has
+  the exact picture rules.
 
 ## Code
 
@@ -38,9 +39,5 @@ follow the git workflow in the README. Each one is small enough for one class.
   (pitch, length, wave type). Or record a panther growl or a "BOO!" with your
   voice. Ask your teacher, because recorded sounds need a credits entry and
   your permission to use them.
-
-## Coming soon (ask first)
-
-- Student PNG art for characters (the game will load your drawing instead of
-  the code-drawn one).
-- A second maze for the Boo Bash Challenge.
+- **New bonus treat.** Add a treat to `BONUS_TREATS` in `config.js` and draw
+  it (in code in `drawTreat` in `src/render/art.js`, or as a PNG).

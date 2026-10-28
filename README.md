@@ -31,6 +31,8 @@ No Python? In VS Code, install the "Live Server" extension and click
   anywhere or use the round arrow pad. You can press a turn a moment *before*
   the corner and the panther will still take it.
 - **Eat all the candy corn** to clear the hall and go to the next level.
+- **Bonus treats** (a candy apple, a full-size bar, a golden pumpkin) appear
+  twice per level for a few seconds. Grab them for big points!
 - **Golden paws** give you Panther Power: the ghosts turn blue and run. Pounce
   on them for 200, then 400, 800 and 1600 in a row. When they start flashing,
   the power is almost over!
@@ -44,8 +46,9 @@ No Python? In VS Code, install the "Live Server" extension and click
   exactly the same way, so it's fair. Score enough for a **Bronze, Silver,
   Gold or Legendary Panther** prize, and make the top 10 to put your initials
   on the high-score board (just 3 letters, never your name).
-- **Classic:** 3 lives. Clear the hall to reach the next level, where the
-  ghosts get faster.
+- **Classic:** 3 lives. Clear the hall to reach the next level and the next
+  maze (Haunted Halls, then Midnight Gym, and around again), where the ghosts
+  get faster.
 
 Running the booth at the event? See [`docs/booth-guide.md`](docs/booth-guide.md).
 
@@ -67,11 +70,14 @@ seconds. That's your chance to breathe.
 
 ```
 index.html            the page: the game canvas, the score bar and the menus
+sw.js                 saves the game on the device so it works offline
+manifest.webmanifest  lets phones "Add to Home Screen" and play full screen
 src/
   config.js           ⭐ all the numbers and colors you can tweak
   main.js             connects everything; screen changes, sounds, effects
   mazes/              ⭐ the mazes, drawn as text
     haunted-halls.js  the first maze
+    midnight-gym.js   the second maze
     index.js          the list of mazes the game knows about
   core/               the game rules (no drawing, so they can be tested)
     game.js           eating, power, pouncing, lives, levels, the timer
@@ -90,6 +96,7 @@ src/
     renderer.js       draws each frame
     effects.js        sparks, floating scores, shake, flashes
     layout.js         fits the maze to any screen
+    sprites.js        loads students' own character pictures
   input/controls.js   keyboard, swipes and the arrow pad
   audio/sound.js      sound effects made with code
   storage/            saves things on this device
@@ -98,7 +105,7 @@ src/
   ui/                 menus, score bar, prize screen, initials, high
                       scores, staff mode, fullscreen button
   styles.css          how the menus look
-assets/               fonts (and credits for everything)
+assets/               fonts, icons (and credits for everything)
 tests/                tests for the game rules
 docs/                 the project plan, booth guide and student tasks
 ```
@@ -129,13 +136,16 @@ inside the game.
    | `P` | where the panther starts (exactly one) |
    | `G` | where a ghost starts (inside the ghost house) |
    | `-` | the ghost-house door (exactly one, in the house's top wall) |
+   | `*` | where bonus treats appear (optional) |
 
 4. Add it to `src/mazes/index.js`:
    ```js
    import spookyGym from './spooky-gym.js';
    export const MAZE_SOURCES = [hauntedHalls, spookyGym];
    ```
-5. To play it, set `classic: 'spooky-gym'` in `MAZES` in `src/config.js`.
+5. To play it, add `'spooky-gym'` to the `classic` list in `MAZES` in
+   `src/config.js` (Classic goes through the list, one maze per level). To
+   make it the Boo Bash Challenge maze, pick it in staff mode.
 6. Reload. **The game checks your maze.** If something's wrong (a row that's
    too short, candy you can't reach, a ghost house with a hole), it shows a
    list of the problems instead of the game. Dead ends show up as warnings in
@@ -156,8 +166,35 @@ put the golden paws far apart. Around 20 columns × 22 rows fits phones well.
 4. Run the tests (below), then play and watch how it behaves.
 
 New looks (accessories) are drawn in `drawGhost` in `src/render/art.js`.
-Students' own PNG drawings for characters are planned; see
-`docs/student-tasks.md`.
+
+## Draw your own character (PNG)
+
+You can replace the panther, any ghost, or any bonus treat with your own
+drawing.
+
+1. **Make the picture:**
+   - a **PNG** with a **transparent background** (no white box around it)
+   - **square**, ideally **256 × 256 pixels** (anything from 128 to 512 works)
+   - the character **centered**, filling about 90% of the square
+   - a **dark outline**, because the maze floor is dark purple
+   - **one picture**, no animation frames: the game makes it bob, flip and
+     spin by itself
+   - under about 200 KB
+2. **Which way it faces:** draw the **panther facing right** (the game flips
+   it when you go left). Draw **ghosts and treats facing you**.
+3. **Name it** in lowercase with dashes, like `zombie-hex.png`, and put it in
+   `assets/characters/` (create the folder if it isn't there).
+4. **Point to it** in `src/config.js`:
+   - The panther: `art: 'assets/characters/my-panther.png'` in `PANTHER`.
+   - A ghost: add `art: 'assets/characters/zombie-hex.png'` to its line in
+     `GHOSTS`. Scared ghosts still turn into the blue built-in look, so
+     everyone can tell when it's safe to pounce.
+   - A treat: add `art: '...'` to its line in `BONUS_TREATS`.
+5. **Add the file to `FILES` in `sw.js`**, so it works offline. The tests
+   remind you if you forget.
+6. **Credit yourself** in `assets/CREDITS.md`.
+7. Reload. If the picture can't be found, the game keeps the built-in drawing
+   and explains why in the console (F12).
 
 ## Run the tests
 
@@ -168,7 +205,8 @@ node --test
 ```
 
 Run them after you change anything in `src/core/` or a maze. They also check
-that every maze in `src/mazes/` is valid.
+that every maze in `src/mazes/` is valid, and that `sw.js` lists every file
+the game needs to work offline.
 
 ## Student git workflow
 

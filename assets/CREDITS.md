@@ -23,13 +23,16 @@ of this project's own code and carry no third-party license.
 | The panther, the four ghosts (Hex, Jack, Mist, Bones), candy corn, golden paw | `src/render/art.js` |
 | Night sky, harvest moon, hallway floor, lockers, ghost-house door, cobwebs | `src/render/scene.js` |
 | Sparks, floating scores, flashes | `src/render/effects.js`, `src/render/renderer.js` |
-| HUD paw icons, button icons, arrow pad, browser-tab icon | inline SVG in `index.html` and `src/ui/hud.js` |
+| Bonus treats (candy apple, full-size bar, golden pumpkin), classroom windows | `src/render/art.js`, `src/render/scene.js` |
+| HUD paw icons, button icons, arrow pad, prize medal, browser-tab icon | inline SVG in `index.html` and `src/ui/hud.js` |
+| App icons `icons/icon-*.png` | rendered from the panther drawing in `src/render/art.js` (Oct 27, 2026) |
 
 ## Mazes
 
 | Maze | Designer |
 |---|---|
 | Haunted Halls (`src/mazes/haunted-halls.js`) | Original design for Panther Prowl, Oct 2026 |
+| Midnight Gym (`src/mazes/midnight-gym.js`) | Original design for Panther Prowl, Oct 2026 |
 
 ## Sound
 

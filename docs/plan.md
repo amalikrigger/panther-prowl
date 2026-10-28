@@ -160,7 +160,17 @@ same way for all three games.
   - On a non-station device: no code, nothing logged.
   - `node --test` 40/40.
   **Waiting on Amali:** checkpoint review and commit approval.
-- [ ] Phase 3: next (polish, offline service worker, second maze, student PNGs)
+- [x] Phase 3: built and verified Oct 27.
+  - Offline: a network-first service worker caches 44 files, and the
+    manifest and icons support "Add to Home Screen". Tested by loading once,
+    going offline, reloading and playing.
+  - New content: bonus treats, a second maze (Midnight Gym, rotating in
+    Classic), and student PNG characters with a fallback.
+  - Polish: lit classroom windows, a Panther Power border, and Challenge
+    countdown ticks plus a "Time's up!" banner.
+  - Holds 60 fps at a 6× CPU throttle at 1024×768@2×; `node --test` 46/46.
+  **Waiting on Amali:** checkpoint review and commit approval.
+- [ ] Rehearsal on real booth devices (Thu Oct 29 afternoon)
 - Score calibration so far (90 s round): steering at random scores about
   1,250, and the autopilot scores a median of about 6,000. Placeholder tiers
   are set at 1,500 / 2,500 / 4,000 / 6,000.

@@ -3,10 +3,11 @@
 // Order matters: things drawn later cover things drawn earlier. So we draw the
 // background first, then candy, ghosts, the panther, sparks, and finally text.
 
-import { GHOSTS, EFFECTS, THEME } from '../config.js';
+import { GHOSTS, EFFECTS, THEME, PANTHER } from '../config.js';
 import { PELLET } from '../core/game.js';
 import { buildScene } from './scene.js';
-import { drawPanther, drawGhost, drawCandyCorn, drawPowerPaw } from './art.js';
+import { drawPanther, drawGhost, drawCandyCorn, drawPowerPaw, drawTreat } from './art.js';
+import { getSprite, drawSprite } from './sprites.js';
 
 const ghostSpecs = Object.fromEntries(GHOSTS.map((spec) => [spec.id, spec]));
 
@@ -23,6 +24,7 @@ export class Renderer {
   /** Call when the screen size or the maze changes. */
   resize(layout, maze) {
     this.layout = layout;
+    this.maze = maze;
     this.canvas.width = Math.round(layout.width * layout.pixelRatio);
     this.canvas.height = Math.round(layout.height * layout.pixelRatio);
     this.scene = buildScene(layout, maze);
@@ -58,12 +60,14 @@ export class Renderer {
     ctx.clip();
 
     this.drawPellets(game, time);
+    this.drawTreat(game, time);
     this.drawGhosts(game, time);
     this.drawThePanther(game, time);
     effects.drawParticles(ctx);
     this.drawFlicker(game, dt);
 
     ctx.restore();
+    this.drawPowerBorder(game, time);
 
     // 3. Floating score numbers, in screen pixels so the text stays crisp.
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -113,6 +117,20 @@ export class Renderer {
     }
   }
 
+  drawTreat(game, time) {
+    const { treat } = game;
+    if (!treat) return;
+    // Blink for the last 2 seconds as a warning.
+    if (treat.timeLeft < 2 && Math.floor(time * 8) % 2 === 0) return;
+    const { ctx } = this;
+    ctx.save();
+    ctx.translate(treat.col, treat.row);
+    const image = getSprite(treat.art);
+    if (image) drawSprite(ctx, image, 1.1);
+    else drawTreat(ctx, treat.id, this.reducedMotion ? 0 : time);
+    ctx.restore();
+  }
+
   drawGhosts(game, time) {
     const { ctx } = this;
     const fading = game.phase === 'caught' ? Math.max(0, 1 - (1 - game.phaseLeft / game.phaseLength) * 3) : 1;
@@ -128,7 +146,11 @@ export class Renderer {
       };
       // Ghosts waiting in the house bob up and down.
       const bob = ghost.state === 'waiting' && !this.reducedMotion ? Math.sin(time * 4 + ghost.index) * 0.2 : 0;
-      this.drawWrapped(game.maze, ghost.x, ghost.y + bob, () => drawGhost(ctx, ghostSpecs[ghost.id], state));
+      const spec = ghostSpecs[ghost.id];
+      // A student's picture, if there is one (but scared ghosts and eyes
+      // always use the built-in look, so players can tell what's safe).
+      const image = !state.scared && !state.eyesOnly ? getSprite(spec.art) : null;
+      this.drawWrapped(game.maze, ghost.x, ghost.y + bob, () => (image ? drawSprite(ctx, image, 1.05) : drawGhost(ctx, spec, state)));
     }
     ctx.globalAlpha = 1;
   }
@@ -143,7 +165,27 @@ export class Renderer {
       powered: game.powerLeft > 0,
       caughtProgress,
     };
-    this.drawWrapped(game.maze, panther.x, panther.y, () => drawPanther(this.ctx, state));
+    const image = getSprite(PANTHER.art);
+    this.drawWrapped(game.maze, panther.x, panther.y, () => (image ? this.drawPantherPicture(image, state) : drawPanther(this.ctx, state)));
+  }
+
+  // A student's panther picture: faces right in the file, flipped when
+  // moving left, spins away when caught.
+  drawPantherPicture(image, { facing, powered, caughtProgress }) {
+    const { ctx } = this;
+    ctx.save();
+    if (caughtProgress > 0) {
+      ctx.rotate(caughtProgress * Math.PI * 4);
+      ctx.scale(1 - caughtProgress * 0.9, 1 - caughtProgress * 0.9);
+    }
+    if (powered) {
+      ctx.fillStyle = 'rgba(246, 188, 27, 0.35)';
+      ctx.beginPath();
+      ctx.arc(0, 0, 0.75, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    drawSprite(ctx, image, powered ? 1.25 : 1.1, { flip: facing === 'left' });
+    ctx.restore();
   }
 
   // Something halfway through a tunnel shows up on both sides of the maze.
@@ -158,6 +200,22 @@ export class Renderer {
       draw();
       ctx.restore();
     }
+  }
+
+  // During Panther Power the maze gets a glowing gold edge, faster as the
+  // power runs out. (Still in tile units.)
+  drawPowerBorder(game, time) {
+    if (game.powerLeft <= 0) return;
+    const { ctx } = this;
+    const speed = game.powerEnding ? 16 : 6;
+    const pulse = this.reducedMotion ? 0.6 : 0.45 + Math.sin(time * speed) * 0.25;
+    ctx.save();
+    ctx.strokeStyle = `rgba(246, 188, 27, ${pulse})`;
+    ctx.lineWidth = 0.22;
+    ctx.shadowColor = THEME.gold;
+    ctx.shadowBlur = 14;
+    ctx.strokeRect(-0.6, -0.6, game.maze.cols + 0.2, game.maze.rows + 0.2);
+    ctx.restore();
   }
 
   // Every so often the hallway lights flicker.

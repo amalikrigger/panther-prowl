@@ -117,6 +117,41 @@ function drawWalls(ctx, maze) {
   ctx.fill();
 
   drawLockerDetails(ctx, maze);
+  drawClassroomWindows(ctx, maze);
+}
+
+// Inside the big solid blocks of wall (classrooms!), a few windows glow
+// where someone left the lights on. Seeded, so the same windows light up
+// every time.
+function drawClassroomWindows(ctx, maze) {
+  const random = createRandom(maze.cols * 100 + maze.rows);
+  const isWall = (c, r) => c < 0 || r < 0 || c >= maze.cols || r >= maze.rows || maze.terrain[r][c] === 'wall';
+  for (let row = 1; row < maze.rows - 1; row++) {
+    for (let col = 1; col < maze.cols - 1; col++) {
+      // Only tiles completely surrounded by wall (so it's a real block).
+      let solid = true;
+      for (let dy = -1; dy <= 1 && solid; dy++) for (let dx = -1; dx <= 1; dx++) if (!isWall(col + dx, row + dy)) solid = false;
+      if (!solid || random() > 0.45) continue;
+
+      const lit = random() < 0.6;
+      const glow = ctx.createRadialGradient(col + 0.5, row + 0.5, 0.05, col + 0.5, row + 0.5, 0.6);
+      glow.addColorStop(0, lit ? 'rgba(255, 215, 94, 0.45)' : 'rgba(123, 63, 196, 0.25)');
+      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(col - 0.2, row - 0.2, 1.4, 1.4);
+      ctx.fillStyle = lit ? '#ffd75e' : '#3a1d5c';
+      ctx.fillRect(col + 0.25, row + 0.25, 0.5, 0.5);
+      ctx.strokeStyle = THEME.wallShade;
+      ctx.lineWidth = 0.06;
+      ctx.beginPath();
+      ctx.moveTo(col + 0.5, row + 0.25);
+      ctx.lineTo(col + 0.5, row + 0.75);
+      ctx.moveTo(col + 0.25, row + 0.5);
+      ctx.lineTo(col + 0.75, row + 0.5);
+      ctx.stroke();
+      ctx.strokeRect(col + 0.25, row + 0.25, 0.5, 0.5);
+    }
+  }
 }
 
 /** Calls draw(col, row, open) for each wall tile; `open` says which sides face hallway. */

@@ -341,3 +341,56 @@ test('eating every candy clears the hall and starts the next level', () => {
   assert.equal(game.level, 2);
   assert.equal(game.candyLeft, game.maze.candy.length + game.maze.powers.length);
 });
+
+// ----------------------------------------------------------------------------
+// Bonus treats
+// ----------------------------------------------------------------------------
+
+test('a bonus treat appears after enough candy, and eating it scores its points', async () => {
+  const { BONUS_TREATS } = await import('../src/config.js');
+  const game = new Game({ maze: haunted() });
+  run(game, TIMING.readySeconds + 0.05);
+  game.candyThisLevel = BONUS_TREATS.appearAfterCandy[0] - 1;
+  game.steer('left');
+  run(game, 0.2); // eats one more candy
+  assert.ok(game.treat, 'treat should be on the maze');
+  assert.equal(game.treat.id, BONUS_TREATS.treats[0].id);
+
+  // Stand on it.
+  game.panther.x = game.treat.col;
+  game.panther.y = game.treat.row;
+  game.panther.dir = null;
+  const before = game.score;
+  run(game, 1 / 60);
+  assert.equal(game.treat, null);
+  assert.equal(game.score - before, BONUS_TREATS.treats[0].points);
+  assert.equal(game.stats.treats, 1);
+});
+
+test('an uneaten bonus treat disappears after its time', async () => {
+  const { BONUS_TREATS } = await import('../src/config.js');
+  const game = new Game({ maze: haunted() });
+  run(game, TIMING.readySeconds + 0.05);
+  game.placeTreat();
+  run(game, BONUS_TREATS.seconds + 0.1);
+  assert.equal(game.treat, null);
+  assert.ok(game.takeEvents().some((event) => event.type === 'treatGone'));
+});
+
+test('two bonus treat spots are an error', () => {
+  const m = maze(SMALL.replace('#.........#', '#..*...*..#'));
+  assert.match(errors(m).join('\n'), /two bonus treat spots/);
+});
+
+test('Classic can go through a list of mazes, one per level', () => {
+  const [first, second] = MAZE_SOURCES.map((source) => new Maze(source));
+  const game = new Game({ maze: first, levelMazes: [first, second] });
+  run(game, TIMING.readySeconds + 0.05);
+  game.setPhase('cleared', 0.01);
+  run(game, 0.05);
+  assert.equal(game.level, 2);
+  assert.equal(game.maze, second);
+  assert.equal(game.panther.maze, second, 'the panther moved into the new maze');
+  assert.deepEqual({ x: game.panther.x, y: game.panther.y }, { x: second.pantherStart.col, y: second.pantherStart.row });
+  assert.equal(game.candyLeft, second.candy.length + second.powers.length);
+});

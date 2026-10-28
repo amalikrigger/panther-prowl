@@ -162,6 +162,23 @@ export const sounds = {
     [7, 6, 3, 0].forEach((step, i) => tone({ from: note(220, step), duration: 0.35, volume: 0.15, type: 'triangle', delay: i * 0.25, vibrato: 4 }));
   },
 
+  treatAppears() {
+    if (!ready()) return;
+    [0, 7, 12].forEach((step, i) => tone({ from: note(784, step), duration: 0.1, volume: 0.08, type: 'sine', delay: i * 0.05 }));
+  },
+
+  treat() {
+    if (!ready()) return;
+    noise({ duration: 0.08, volume: 0.15, from: 3000, filter: 'highpass' });
+    [0, 4, 7, 12, 16].forEach((step, i) => tone({ from: note(659, step), duration: 0.12, volume: 0.12, type: 'square', delay: i * 0.04 }));
+  },
+
+  /** A tick for the last seconds of the Challenge. */
+  tick(urgent = false) {
+    if (!ready()) return;
+    tone({ from: urgent ? 1320 : 880, duration: 0.05, volume: 0.1, type: 'square' });
+  },
+
   tap() {
     if (!ready()) return;
     tone({ from: 880, to: 1200, duration: 0.05, volume: 0.08, type: 'triangle' });

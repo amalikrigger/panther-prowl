@@ -4,7 +4,7 @@
 // code (src/render/). It sets things up, runs the loop, switches screens, and
 // turns game events ("candy", "pounce", "caught"...) into sounds and effects.
 
-import { MAZES, MODES, CONTROLS, THEME, GHOSTS, STAFF } from './config.js';
+import { MAZES, MODES, CONTROLS, THEME, GHOSTS, STAFF, PANTHER, BONUS_TREATS } from './config.js';
 import { Maze } from './core/maze.js';
 import { Game } from './core/game.js';
 import { autopilotDirection } from './core/autopilot.js';
@@ -27,6 +27,7 @@ import { askForInitials, handleInitialsKey, submitInitials, skipInitials } from 
 import { showLeaderboard } from './ui/leaderboard.js';
 import { askForPin, handlePinKey, submitPin, openStaffPanel, confirmTwice, showStaffMessage } from './ui/staff.js';
 import { moonCircle } from './render/scene.js';
+import { loadSprite } from './render/sprites.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -38,7 +39,8 @@ let isTouch = window.matchMedia?.('(pointer: coarse)').matches || 'ontouchstart'
 // -----------------------------------------------------------------------------
 
 const mazes = Object.fromEntries(MAZE_SOURCES.map((source) => [source.id, new Maze(source)]));
-const classicMaze = mazes[MAZES.classic];
+const classicMazes = MAZES.classic.map((id) => mazes[id]).filter(Boolean);
+const classicMaze = classicMazes[0];
 
 // -----------------------------------------------------------------------------
 // The pieces
@@ -130,7 +132,7 @@ function startGame(mode) {
     // Same maze, same seed, same length for every paid play.
     game = new Game({ maze: challengeMaze(), mode, seed: MODES.challenge.seed, roundSeconds: settings.roundSeconds });
   } else {
-    game = new Game({ maze: classicMaze, mode, seed: Date.now() % 100000 });
+    game = new Game({ maze: classicMaze, levelMazes: classicMazes.filter((maze) => !maze.hasErrors), mode, seed: Date.now() % 100000 });
   }
   gameOverAt = null;
   effects.clear();
@@ -420,17 +422,37 @@ function handleEvents(events) {
       case 'level':
         effects.popup(panther.x, panther.y - 1, `Level ${event.level}`, { color: '#fff6d6', size: 0.9, life: 1.4 });
         break;
+      case 'treatAppears':
+        sounds.treatAppears();
+        effects.burst(event.col, event.row, { colors: ['#fff6d6', THEME.gold], count: 10, speed: 3, life: 0.5 });
+        break;
+      case 'treat':
+        sounds.treat();
+        effects.burst(event.col, event.row, { colors: ['#ff3355', THEME.gold, '#fff6d6'], count: 20, speed: 5 });
+        effects.popup(event.col, event.row, event.points.toLocaleString(), { color: '#fff6d6', size: 0.9 });
+        effects.popup(event.col, event.row + 0.9, event.name, { color: THEME.gold, size: 0.55 });
+        break;
       case 'extraLife':
         sounds.extraLife();
         effects.popup(panther.x, panther.y - 1, '+1 LIFE', { color: '#7CFF6B', size: 0.9 });
         break;
       case 'over':
-        hideBanner();
+        if (event.reason === 'time') showBanner("Time's up!", { seconds: 0, gold: true });
+        else hideBanner();
         sounds.gameOver();
         gameOverAt = performance.now();
         break;
     }
   }
+}
+
+// The Challenge clock ticks out loud for the last 10 seconds.
+let lastTickSecond = null;
+function tickLastSeconds() {
+  if (game.mode !== 'challenge' || !game.clockRunning) return;
+  const second = Math.ceil(game.timeLeft);
+  if (second !== lastTickSecond && second <= 10 && second > 0) sounds.tick(second <= 3);
+  lastTickSecond = second;
 }
 
 // -----------------------------------------------------------------------------
@@ -443,6 +465,8 @@ function frame(dt, time) {
     if (held) game.steer(held);
     game.update(dt);
     handleEvents(game.takeEvents());
+    tickLastSeconds();
+    if (game && renderer.maze !== game.maze) relayout(); // a new level can mean a new maze
     // Give the caught animation a moment before the results slide in.
     if (gameOverAt && performance.now() - gameOverAt > 900) finishGame();
   } else if ((screen === 'title' || screen === 'leaderboard-attract') && attract) {
@@ -502,6 +526,9 @@ $('mute-button').addEventListener('click', toggleMute);
 // -----------------------------------------------------------------------------
 
 async function boot() {
+  // Students' own character pictures, if any are set in config.js.
+  for (const art of [PANTHER.art, ...GHOSTS.map((g) => g.art), ...BONUS_TREATS.treats.map((t) => t.art)]) loadSprite(art);
+
   setMuted(load('muted', false));
   $('mute-button').setAttribute('aria-pressed', String(isMuted()));
   setupFullscreen({ button: $('fullscreen-button'), iosHint: $('ios-hint') });
@@ -513,8 +540,13 @@ async function boot() {
   for (const maze of Object.values(mazes)) {
     for (const problem of maze.problems) console[problem.level === 'error' ? 'error' : 'warn'](problem.message);
   }
-  if (!classicMaze || classicMaze.hasErrors) {
-    showMazeProblems(classicMaze?.problems ?? [{ message: `No maze called "${MAZES.classic}" in src/mazes/index.js.` }]);
+  const missing = MAZES.classic.filter((id) => !mazes[id]);
+  const broken = Object.values(mazes).filter((maze) => maze.hasErrors);
+  if (missing.length || broken.length) {
+    showMazeProblems([
+      ...missing.map((id) => ({ message: `There's no maze called "${id}" in src/mazes/index.js (it's in MAZES in config.js).` })),
+      ...broken.flatMap((maze) => maze.problems.filter((problem) => problem.level === 'error')),
+    ]);
     screen = 'maze-error';
     return;
   }
@@ -526,6 +558,12 @@ async function boot() {
   relayout();
   startLoop(frame, { onHide: pause });
   goToTitle();
+
+  // Save the game's files on this device so it works with no internet
+  // (see sw.js). Service workers only run on https:// or localhost.
+  if ('serviceWorker' in navigator && window.isSecureContext) {
+    navigator.serviceWorker.register('sw.js').catch((error) => console.warn('Offline mode unavailable:', error));
+  }
 
   if (new URLSearchParams(location.search).has('debug')) {
     window.pantherProwl = { get game() { return game; }, get attract() { return attract; }, mazes, get layout() { return layout; } };

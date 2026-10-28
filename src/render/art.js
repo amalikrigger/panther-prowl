@@ -438,3 +438,102 @@ export function drawPowerPaw(ctx, time) {
   }
   ctx.restore();
 }
+
+// -----------------------------------------------------------------------------
+// Bonus treats
+// -----------------------------------------------------------------------------
+
+/** A bonus treat, drawn at (0, 0). `id` matches BONUS_TREATS in config.js. */
+export function drawTreat(ctx, id, time) {
+  const bob = Math.sin(time * 4) * 0.05;
+  ctx.save();
+  ctx.translate(0, bob);
+
+  // A soft glow so it stands out from the candy.
+  const glow = ctx.createRadialGradient(0, 0, 0.1, 0, 0, 0.75);
+  glow.addColorStop(0, 'rgba(255, 246, 214, 0.45)');
+  glow.addColorStop(1, 'rgba(255, 246, 214, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, 0.75, 0, TAU);
+  ctx.fill();
+
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 0.04;
+  ctx.strokeStyle = 'rgba(10, 4, 16, 0.6)';
+
+  if (id === 'candy-apple') {
+    // Stick, shiny red apple, caramel drips.
+    ctx.fillStyle = '#e9d3a6';
+    ctx.fillRect(-0.03, -0.62, 0.06, 0.34);
+    ctx.fillStyle = '#d0142c';
+    ctx.beginPath();
+    ctx.ellipse(0, 0.05, 0.36, 0.33, 0, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#c9781e';
+    ctx.beginPath();
+    ctx.moveTo(-0.34, -0.06);
+    ctx.quadraticCurveTo(0, -0.38, 0.34, -0.06);
+    for (const [x, drip] of [[0.22, 0.12], [0.08, 0.2], [-0.08, 0.1], [-0.22, 0.16]]) ctx.quadraticCurveTo(x + 0.06, -0.06 + drip, x, -0.06);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.ellipse(-0.14, 0.06, 0.05, 0.1, 0.4, 0, TAU);
+    ctx.fill();
+  } else if (id === 'full-size-bar') {
+    // A big candy bar in a Panthers wrapper (no real brand!).
+    ctx.rotate(-0.25);
+    ctx.fillStyle = THEME.maroon;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-0.5, -0.22, 1, 0.44, 0.06);
+    else ctx.rect(-0.5, -0.22, 1, 0.44); // older browsers
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = THEME.gold;
+    ctx.fillRect(-0.5, -0.06, 1, 0.12);
+    for (const side of [-1, 1]) {
+      ctx.fillStyle = '#cfcfd6'; // crimped foil ends
+      ctx.beginPath();
+      ctx.moveTo(side * 0.5, -0.22);
+      ctx.lineTo(side * 0.62, -0.26);
+      ctx.lineTo(side * 0.58, 0);
+      ctx.lineTo(side * 0.62, 0.26);
+      ctx.lineTo(side * 0.5, 0.22);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = THEME.maroon;
+    for (const x of [-0.18, 0, 0.18]) {
+      ctx.beginPath();
+      ctx.arc(x, 0, 0.035, 0, TAU);
+      ctx.fill();
+    }
+  } else {
+    // Golden pumpkin with a sparkle.
+    ctx.fillStyle = THEME.gold;
+    for (const [x, w] of [[-0.18, 0.2], [0.18, 0.2], [0, 0.24]]) {
+      ctx.beginPath();
+      ctx.ellipse(x, 0.06, w, 0.32, 0, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#3c7a2a';
+    ctx.fillRect(-0.04, -0.4, 0.08, 0.16);
+    const sparkle = (Math.sin(time * 6) + 1) / 2;
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + sparkle * 0.6})`;
+    ctx.beginPath();
+    ctx.moveTo(0.22, -0.3);
+    ctx.lineTo(0.26, -0.18);
+    ctx.lineTo(0.38, -0.14);
+    ctx.lineTo(0.26, -0.1);
+    ctx.lineTo(0.22, 0.02);
+    ctx.lineTo(0.18, -0.1);
+    ctx.lineTo(0.06, -0.14);
+    ctx.lineTo(0.18, -0.18);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}

@@ -6,6 +6,7 @@
 //   o  golden paw (Panther Power)     _  empty hallway (no candy)
 //   P  where the panther starts       G  where a ghost starts
 //   -  ghost-house door (ghosts only)
+//   *  where bonus treats appear (optional)
 //
 // Rules the game checks when it loads (problems show up on screen):
 //   - Every row is the same length.
@@ -34,7 +35,7 @@ export default {
 ####.#.###-###.#.####
 ####...#GG_GG#...####
 ####.#.#######.#.####
-####.#.........#.####
+####.#....*....#.####
 ####.#.#######.#.####
 #.........#.........#
 #.##.####.#.####.##.#

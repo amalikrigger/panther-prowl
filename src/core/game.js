@@ -15,7 +15,7 @@
 //
 // In Boo Bash Challenge mode the clock can also end the game at any time.
 
-import { GHOSTS, GHOST_SPEED, GHOST_MOODS, BRAINS, PANTHER, POWER, SCORING, MODES, TIMING } from '../config.js';
+import { GHOSTS, GHOST_SPEED, GHOST_MOODS, BRAINS, PANTHER, POWER, SCORING, MODES, TIMING, BONUS_TREATS } from '../config.js';
 import { Panther } from './panther.js';
 import { Ghost } from './ghost.js';
 import { distanceBetween } from './movement.js';
@@ -28,16 +28,17 @@ const POWER_PAW = 2;
 export class Game {
   /**
    * @param maze  a Maze (src/core/maze.js) with no errors
+   * @param levelMazes  (optional) a list of Mazes to go through, one per level;
+   *                    after the last one it starts over. Default: just `maze`.
    * @param mode  'classic' or 'challenge'
    * @param seed  starts the random numbers; the same seed gives the same ghost choices
    * @param roundSeconds  Challenge length (staff can override the config value)
    */
-  constructor({ maze, mode = 'classic', seed = 1, roundSeconds = MODES.challenge.roundSeconds }) {
-    this.maze = maze;
+  constructor({ maze, levelMazes = [maze], mode = 'classic', seed = 1, roundSeconds = MODES.challenge.roundSeconds }) {
+    this.levelMazes = levelMazes;
     this.mode = mode;
     this.random = createRandom(seed);
-    this.panther = new Panther(maze, PANTHER);
-    this.ghosts = GHOSTS.map((spec, index) => new Ghost(spec, index, maze));
+    this.useMaze(levelMazes[0]);
     this.events = [];
 
     this.score = 0;
@@ -47,7 +48,7 @@ export class Game {
     this.timeLeft = mode === 'challenge' ? roundSeconds : Infinity;
     this.clockRunning = false; // the Challenge clock starts on the first "go"
     this.extraLifeGiven = false;
-    this.stats = { candy: 0, pounces: 0, bestChain: 0, timesCaught: 0 };
+    this.stats = { candy: 0, pounces: 0, bestChain: 0, timesCaught: 0, treats: 0 };
 
     this.fillCandy();
     this.startLife();
@@ -57,12 +58,21 @@ export class Game {
   // Setting up
   // ---------------------------------------------------------------------------
 
+  /** Switch to a maze: the panther and ghosts move into it. */
+  useMaze(maze) {
+    this.maze = maze;
+    this.panther = new Panther(maze, PANTHER);
+    this.ghosts = GHOSTS.map((spec, index) => new Ghost(spec, index, maze));
+  }
+
   fillCandy() {
     const { cols, rows } = this.maze;
     this.pellets = new Uint8Array(cols * rows); // one slot per tile
     for (const { col, row } of this.maze.candy) this.pellets[row * cols + col] = CANDY;
     for (const { col, row } of this.maze.powers) this.pellets[row * cols + col] = POWER_PAW;
     this.candyLeft = this.maze.candy.length + this.maze.powers.length;
+    this.candyThisLevel = 0;
+    this.treat = null; // the bonus treat on the maze right now, if any
   }
 
   /** Put everyone back at their start and count down. */
@@ -122,6 +132,7 @@ export class Game {
       case 'cleared':
         if (this.phaseLeft <= 0) {
           this.level += 1;
+          this.useMaze(this.levelMazes[(this.level - 1) % this.levelMazes.length]);
           this.fillCandy();
           this.startLife();
           this.emit('level', { level: this.level });
@@ -137,6 +148,7 @@ export class Game {
     const pantherSpeed = this.powerLeft > 0 ? PANTHER.powerSpeed : PANTHER.speed;
     this.panther.update(dt, pantherSpeed);
     this.eatWhatsHere();
+    this.updateTreat(dt);
 
     const world = {
       panther: this.panther,
@@ -174,12 +186,41 @@ export class Game {
     this.candyLeft -= 1;
     if (pellet === CANDY) {
       this.stats.candy += 1;
+      this.candyThisLevel += 1;
       this.addScore(SCORING.candy);
       this.emit('candy', { col, row });
+      if (BONUS_TREATS.appearAfterCandy.includes(this.candyThisLevel)) this.placeTreat();
     } else {
       this.addScore(SCORING.powerPaw);
       this.startPower();
       this.emit('power', { col, row, seconds: this.powerLeft });
+    }
+  }
+
+  // Bonus treats: one appears for a few seconds; eat it for big points.
+  placeTreat() {
+    const { treats, seconds } = BONUS_TREATS;
+    const kind = treats[Math.min(this.level - 1, treats.length - 1)];
+    const spot = this.maze.treatSpot ?? this.maze.pantherStart;
+    this.treat = { ...kind, col: spot.col, row: spot.row, timeLeft: seconds };
+    this.emit('treatAppears', { treat: kind.id, col: spot.col, row: spot.row });
+  }
+
+  updateTreat(dt) {
+    if (!this.treat) return;
+    const { col, row } = this.panther.tile;
+    if (col === this.treat.col && row === this.treat.row) {
+      const eaten = this.treat;
+      this.treat = null;
+      this.stats.treats += 1;
+      this.addScore(eaten.points);
+      this.emit('treat', { treat: eaten.id, name: eaten.name, points: eaten.points, col, row });
+      return;
+    }
+    this.treat.timeLeft -= dt;
+    if (this.treat.timeLeft <= 0) {
+      this.treat = null;
+      this.emit('treatGone');
     }
   }
 

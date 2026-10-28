@@ -17,6 +17,7 @@ export const LEGEND = {
   '-': 'door',  // the ghost-house door: ghosts can pass, the panther can't
   P: 'panther', // where the panther starts
   G: 'ghost',   // where a ghost starts (inside the ghost house)
+  '*': 'treat', // where bonus treats appear (optional, at most one)
 };
 
 export class Maze {
@@ -55,6 +56,7 @@ export class Maze {
     this.ghostStarts = [];
     this.pantherStart = null;
     this.door = null;
+    this.treatSpot = null;
 
     lines.forEach((line, row) => {
       if (line.length !== this.cols) {
@@ -74,6 +76,10 @@ export class Maze {
         if (meaning === 'panther') {
           if (this.pantherStart) this.error(`There are two panthers (P). There must be exactly one.`);
           this.pantherStart = spot;
+        }
+        if (meaning === 'treat') {
+          if (this.treatSpot) this.error('There are two bonus treat spots (*). There can be at most one.');
+          this.treatSpot = spot;
         }
         if (meaning === 'door') {
           if (this.door) this.error(`There are two ghost-house doors (-). There must be exactly one.`);
@@ -192,6 +198,9 @@ export class Maze {
         if (!reachable.has(key(spot.col, spot.row))) {
           this.error(`The candy at row ${spot.row + 1}, column ${spot.col + 1} can't be reached by the panther.`);
         }
+      }
+      if (this.treatSpot && !reachable.has(key(this.treatSpot.col, this.treatSpot.row))) {
+        this.error('The bonus treat spot (*) can\'t be reached by the panther.');
       }
 
       // 4. Dead ends aren't broken, but they're traps: a ghost behind you

@@ -52,7 +52,8 @@ export const THEME = {
 // MAZES: which maze each mode uses. Mazes live in src/mazes/ (see the README).
 // -----------------------------------------------------------------------------
 export const MAZES = {
-  classic: 'haunted-halls',
+  // Classic mode goes through these in order, one per level, then starts over.
+  classic: ['haunted-halls', 'midnight-gym'],
   challenge: 'haunted-halls', // every paid play uses the same maze (staff can change it)
 };
 
@@ -60,6 +61,9 @@ export const MAZES = {
 // THE PANTHER (that's you!)
 // -----------------------------------------------------------------------------
 export const PANTHER = {
+  // Your own drawing instead of the built-in panther, e.g.
+  // 'assets/characters/panther.png' (rules in the README). null = built-in.
+  art: null,
   speed: 7,            // tiles per second
   powerSpeed: 7.8,     // a little faster during Panther Power
   // If you press a turn a bit early, the game remembers it this long and
@@ -79,6 +83,8 @@ export const PANTHER = {
 //   corner     where it goes during "scatter" time:
 //              'top-left', 'top-right', 'bottom-left' or 'bottom-right'
 //   leaveAfter seconds before it leaves the ghost house at the start
+//   art        (optional) your own drawing, e.g. 'assets/characters/hex.png'.
+//              Scared ghosts always use the built-in blue look.
 // -----------------------------------------------------------------------------
 export const GHOSTS = [
   { id: 'hex', name: 'Hex', brain: 'hunter', color: '#6fe36a', look: 'witch-hat', corner: 'top-right', leaveAfter: 0 },
@@ -133,6 +139,23 @@ export const SCORING = {
   // First ghost = 200, second = 400, and so on.
   pounceChain: [200, 400, 800, 1600],
   extraLifeAt: 10000, // Classic mode: earn an extra life at this score
+};
+
+// -----------------------------------------------------------------------------
+// BONUS TREATS: a big treat appears for a few seconds, twice per level, after
+// you've eaten this many candies. Each level has its own treat (after the
+// last one, it keeps using the last). It appears on the maze's * tile (or the
+// panther's start if the maze has none). Add art: 'assets/characters/x.png'
+// to a treat to use your own drawing.
+// -----------------------------------------------------------------------------
+export const BONUS_TREATS = {
+  appearAfterCandy: [60, 140],
+  seconds: 9,
+  treats: [
+    { id: 'candy-apple', name: 'Candy Apple', points: 300 },
+    { id: 'full-size-bar', name: 'Full-Size Bar', points: 500 },
+    { id: 'golden-pumpkin', name: 'Golden Pumpkin', points: 800 },
+  ],
 };
 
 // -----------------------------------------------------------------------------

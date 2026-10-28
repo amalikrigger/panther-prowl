@@ -2,5 +2,6 @@
 // folder (copy haunted-halls.js), then import it and add it to the list below.
 
 import hauntedHalls from './haunted-halls.js';
+import midnightGym from './midnight-gym.js';
 
-export const MAZE_SOURCES = [hauntedHalls];
+export const MAZE_SOURCES = [hauntedHalls, midnightGym];

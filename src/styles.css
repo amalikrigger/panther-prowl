@@ -76,7 +76,7 @@ body {
 
 #game {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0; /* same as inset: 0, for older Safari */
   width: 100%;
   height: 100%;
   display: block;
@@ -87,7 +87,7 @@ body {
    Only the actual buttons and panels catch taps. */
 #ui {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0; /* same as inset: 0, for older Safari */
   pointer-events: none;
 }
 
@@ -107,7 +107,7 @@ button {
 
 .screen {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0; /* same as inset: 0, for older Safari */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -558,7 +558,7 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
 .prize-badge {
   position: relative;
   width: min(46vmin, 190px);
-  aspect-ratio: 1;
+  height: min(46vmin, 190px); /* square (older Safari has no aspect-ratio) */
   margin: 4px auto 0;
   animation: badge-in 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
@@ -570,8 +570,9 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
 /* Light rays spinning behind the medal. */
 .prize-rays {
   position: absolute;
-  inset: -18%;
+  top: -18%; right: -18%; bottom: -18%; left: -18%;
   border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 246, 214, 0.35) 0deg 10deg, transparent 10deg 30deg);
   background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tier-color) 55%, transparent) 0deg 10deg, transparent 10deg 30deg);
   -webkit-mask: radial-gradient(circle, #000 35%, transparent 70%);
   mask: radial-gradient(circle, #000 35%, transparent 70%);
@@ -749,7 +750,7 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
 
 .noscript {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0; /* same as inset: 0, for older Safari */
   display: grid;
   place-items: center;
   font-size: 22px;
@@ -783,7 +784,7 @@ body:not([data-screen='playing']) .dpad { opacity: 0; visibility: hidden; }
     align-items: center;
   }
   .prize-meta { grid-area: meta; }
-  .prize-badge { grid-area: badge; width: 30vmin; }
+  .prize-badge { grid-area: badge; width: 30vmin; height: 30vmin; }
   .prize-tier { grid-area: tier; align-self: start; font-size: 10vmin; }
   .prize-panel .results-score { grid-area: score; margin: 0; }
   .prize-note { grid-area: note; font-size: 15px; }

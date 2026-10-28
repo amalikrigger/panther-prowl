@@ -274,5 +274,18 @@
   </div>
 
   <noscript><p class="noscript">Panther Prowl needs JavaScript turned on.</p></noscript>
+
+  <!-- If this browser is too old for the game (or something failed to load),
+       say so instead of showing "Unlocking…" forever. -->
+  <script nomodule>
+    document.querySelector('.loading-text').textContent = 'This browser is too old for Panther Prowl. Please update it, or try Chrome or Safari.';
+  </script>
+  <script>
+    setTimeout(function () {
+      if (document.body.getAttribute('data-screen') === 'loading') {
+        document.querySelector('.loading-text').textContent = 'Panther Prowl didn\'t load. Check the internet connection and reload. If it keeps happening, this browser may need an update.';
+      }
+    }, 12000);
+  </script>
 </body>
 </html>

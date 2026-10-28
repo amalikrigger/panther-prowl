@@ -93,8 +93,12 @@ async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   try {
     const response = await withTimeout(fetch(request), NETWORK_TIMEOUT_MS);
-    if (response.ok) cache.put(request, response.clone()); // keep the saved copy fresh
-    return response;
+    if (response.ok) {
+      cache.put(request, response.clone()); // keep the saved copy fresh
+      return response;
+    }
+    // The server answered with an error (a flaky host): a saved copy is better.
+    return (await cache.match(request, { ignoreSearch: true })) ?? response;
   } catch {
     // Offline or too slow: use the saved copy. ignoreSearch lets
     // "index.html?debug" use the saved "index.html".

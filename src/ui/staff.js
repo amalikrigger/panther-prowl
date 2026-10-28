@@ -89,6 +89,11 @@ export function openStaffPanel({ settings, mazes, prizeLog, save }) {
 
   form.prizeStation.checked = settings.prizeStation;
   form.stationName.value = settings.stationName;
+  // If the saved length isn't one of the choices (someone edited config.js),
+  // add it, so saving doesn't silently pick nothing.
+  if (![...form.roundSeconds.options].some((option) => option.value === String(settings.roundSeconds))) {
+    form.roundSeconds.add(new Option(`${settings.roundSeconds} seconds`, String(settings.roundSeconds)));
+  }
   form.roundSeconds.value = String(settings.roundSeconds);
   form.kiosk.checked = settings.kiosk;
   form.kioskIdleSeconds.value = settings.kioskIdleSeconds;
@@ -134,12 +139,15 @@ form.addEventListener('submit', (event) => {
     if (tiers[i].minScore <= tiers[i - 1].minScore) return error(`${tiers[i].name} must need more points than ${tiers[i - 1].name}.`);
   }
 
+  const roundSeconds = Number(form.roundSeconds.value);
+  if (!Number.isFinite(roundSeconds) || roundSeconds < 10) return error('Pick a round length.');
+
   const idle = Number(form.kioskIdleSeconds.value);
   onSave?.({
     ...settings,
     prizeStation: form.prizeStation.checked,
     stationName: form.stationName.value.trim().slice(0, 16) || 'Booth',
-    roundSeconds: Number(form.roundSeconds.value),
+    roundSeconds,
     challengeMaze: form.challengeMaze.value,
     tiers,
     kiosk: form.kiosk.checked,
@@ -156,7 +164,7 @@ export function confirmTwice(button) {
     button.textContent = button.dataset.label;
     return true;
   }
-  button.dataset.label ??= button.textContent;
+  if (!button.dataset.label) button.dataset.label = button.textContent;
   button.dataset.armed = 'yes';
   button.textContent = button.dataset.confirm;
   setTimeout(() => {

@@ -394,3 +394,40 @@ test('Classic can go through a list of mazes, one per level', () => {
   assert.deepEqual({ x: game.panther.x, y: game.panther.y }, { x: second.pantherStart.col, y: second.pantherStart.row });
   assert.equal(game.candyLeft, second.candy.length + second.powers.length);
 });
+
+// ----------------------------------------------------------------------------
+// Bugs found in review (kept as tests so they can't come back)
+// ----------------------------------------------------------------------------
+
+test('pounced ghost eyes get home from every hallway tile, in every maze', () => {
+  const world = { panther: fakePanther(0, 0), mood: 'chase', random: Math.random, settings: {}, speeds: { normal: 5, scared: 3, eyes: 12, inHouse: 3 } };
+  for (const source of MAZE_SOURCES) {
+    const m = new Maze(source);
+    for (const { col, row } of m.floodFill(m.pantherStart).values()) {
+      for (const dir of ['up', 'down', 'left', 'right']) {
+        const next = m.neighbor(col, row, dir);
+        if (!m.isOpen(next.col, next.row)) continue;
+        const ghost = new Ghost(GHOSTS[0], 0, m);
+        Object.assign(ghost, { state: 'roaming', x: col, y: row, dir });
+        ghost.pounced();
+        for (let i = 0; i < 600 && ghost.state === 'eyes'; i++) ghost.update(1 / 60, world);
+        assert.notEqual(ghost.state, 'eyes', `${source.id}: eyes lost starting at column ${col + 1}, row ${row + 1} heading ${dir}`);
+      }
+    }
+  }
+});
+
+test('eating the last candy clears the hall even if a ghost touches you at the same moment', () => {
+  const game = new Game({ maze: haunted() });
+  run(game, TIMING.readySeconds + 0.05);
+  game.pellets.fill(0);
+  const { col, row } = game.panther.tile;
+  game.pellets[row * game.maze.cols + col] = 1;
+  game.candyLeft = 1;
+  const ghost = game.ghosts[0];
+  Object.assign(ghost, { state: 'roaming', scared: false, x: game.panther.x, y: game.panther.y });
+  const lives = game.lives;
+  run(game, 1 / 60);
+  assert.equal(game.phase, 'cleared');
+  assert.equal(game.lives, lives);
+});

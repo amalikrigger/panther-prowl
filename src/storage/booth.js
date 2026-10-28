@@ -30,6 +30,9 @@ function defaults() {
 export function loadSettings() {
   const saved = load('settings', {});
   const settings = { ...defaults(), ...saved };
+  // A broken saved value must never break the game: fall back to the default.
+  if (!Number.isFinite(settings.roundSeconds) || settings.roundSeconds < 10) settings.roundSeconds = defaults().roundSeconds;
+  if (!Number.isFinite(settings.kioskIdleSeconds) || settings.kioskIdleSeconds < 10) settings.kioskIdleSeconds = defaults().kioskIdleSeconds;
   // Keep tier names and colors from config.js; only the thresholds are staff's.
   settings.tiers = PRIZE_TIERS.map((tier) => {
     const savedTier = (saved.tiers ?? []).find((t) => t.id === tier.id);

@@ -162,14 +162,16 @@ export class Game {
         inHouse: GHOST_SPEED.inHouse,
       },
     };
-    for (const ghost of this.ghosts) ghost.update(dt, world);
-
-    this.checkTouches();
-
-    if (this.candyLeft === 0 && this.phase === 'playing') {
+    // Ate the last candy? The hall is cleared, even if a ghost touches you
+    // in the very same moment.
+    if (this.candyLeft === 0) {
       this.setPhase('cleared', TIMING.clearedSeconds);
       this.emit('cleared', { level: this.level });
+      return;
     }
+
+    for (const ghost of this.ghosts) ghost.update(dt, world);
+    this.checkTouches();
   }
 
   // ---------------------------------------------------------------------------

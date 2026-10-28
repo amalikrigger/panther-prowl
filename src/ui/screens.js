@@ -6,18 +6,29 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ['loading', 'title', 'pause', 'results', 'prize', 'initials', 'leaderboard', 'staff-pin', 'staff', 'maze-error'];
 
 /** Show one screen and hide the others. 'playing' hides them all. */
+let shownAt = 0;
+
+/** Milliseconds since the last screen change (main.js ignores taps that come too soon). */
+export const sinceScreenChange = () => performance.now() - shownAt;
+
 export function showScreen(name) {
   for (const screen of SCREENS) {
     $(`screen-${screen}`).classList.toggle('active', screen === name);
   }
   document.body.dataset.screen = name;
+  shownAt = performance.now();
+  // The button that started the game must not keep focus, or Space/Enter
+  // during play could press it again while it fades out.
+  if (name === 'playing') document.activeElement?.blur?.();
   $('hud').hidden = !(name === 'playing' || name === 'pause');
 
   // With a keyboard, move focus to the first button so Enter/Space works
   // right away. (On touch screens that would just draw a focus ring.)
+  // (Not on the prize screen: a stray Enter would skip past it before a
+  // volunteer has seen it.)
   const firstButton = document.querySelector(`#screen-${name} button`);
   const hasKeyboard = window.matchMedia?.('(pointer: fine)').matches;
-  if (firstButton && hasKeyboard) setTimeout(() => firstButton.focus({ preventScroll: true }), 50);
+  if (firstButton && hasKeyboard && name !== 'prize') setTimeout(() => firstButton.focus({ preventScroll: true }), 50);
 }
 
 let bannerTimer = null;

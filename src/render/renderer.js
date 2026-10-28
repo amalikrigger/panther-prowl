@@ -56,7 +56,7 @@ export class Renderer {
     // Anything poking out of a tunnel gets cut off at the maze edge.
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-0.5, -0.5 - 1, maze.cols, maze.rows + 1);
+    ctx.rect(-0.5, -0.5, maze.cols, maze.rows);
     ctx.clip();
 
     this.drawPellets(game, time);
@@ -188,12 +188,15 @@ export class Renderer {
     ctx.restore();
   }
 
-  // Something halfway through a tunnel shows up on both sides of the maze.
+  // Something halfway through a tunnel shows up on both sides of the maze
+  // (left/right or top/bottom).
   drawWrapped(maze, x, y, draw) {
     const { ctx } = this;
     const positions = [[x, y]];
     if (x < 0.5) positions.push([x + maze.cols, y]);
     if (x > maze.cols - 1.5) positions.push([x - maze.cols, y]);
+    if (y < 0.5) positions.push([x, y + maze.rows]);
+    if (y > maze.rows - 1.5) positions.push([x, y - maze.rows]);
     for (const [px, py] of positions) {
       ctx.save();
       ctx.translate(px, py);

@@ -114,7 +114,7 @@ export class Ghost {
             this.state = 'entering';
             return null; // stop here; 'entering' takes over next frame
           }
-          return this.bestDirectionToward(home);
+          return this.directionHome();
         });
         break;
       }
@@ -158,6 +158,26 @@ export class Ghost {
       if (distance < bestDistance) {
         best = direction;
         bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Eyes follow the maze's "steps home" map (see Maze.stepsHome): take the
+   * neighbor that's the fewest steps from home. Turning back is allowed.
+   */
+  directionHome() {
+    const { col, row } = this.tile;
+    const steps = this.maze.stepsHome;
+    let best = null;
+    let fewest = Infinity;
+    for (const direction of DIRECTIONS) {
+      const next = this.maze.neighbor(col, row, direction);
+      const count = steps.get(`${this.maze.wrapCol(next.col)},${this.maze.wrapRow(next.row)}`);
+      if (count !== undefined && count < fewest) {
+        best = direction;
+        fewest = count;
       }
     }
     return best;

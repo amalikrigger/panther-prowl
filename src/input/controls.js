@@ -41,7 +41,7 @@ export class Controls {
 
   /** The direction being held down right now, if any. */
   get heldDirection() {
-    return this.dpadDirection ?? this.heldKeys.at(-1) ?? null;
+    return this.dpadDirection ?? this.heldKeys[this.heldKeys.length - 1] ?? null;
   }
 
   listenToKeyboard() {

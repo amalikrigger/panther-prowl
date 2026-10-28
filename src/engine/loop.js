@@ -10,28 +10,29 @@ const MAX_FRAME_SECONDS = 1 / 20;
 
 export function startLoop(frame, { onHide } = {}) {
   let lastTime = null;
-  let running = true;
+  let pending = null; // the next frame we've asked for (so we never run two loops)
 
   function tick(now) {
-    if (!running) return;
+    // Ask for the next frame FIRST, so one unexpected error can't freeze the
+    // whole game at the booth. The error still shows in the console.
+    pending = requestAnimationFrame(tick);
     const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, MAX_FRAME_SECONDS);
     lastTime = now;
     frame(dt, now / 1000);
-    requestAnimationFrame(tick);
   }
 
   // Stop completely while the tab is hidden: saves battery, and avoids a giant
   // dt when the player comes back.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      running = false;
+      cancelAnimationFrame(pending);
+      pending = null;
       onHide?.();
-    } else if (!running) {
-      running = true;
+    } else if (pending === null) {
       lastTime = null;
-      requestAnimationFrame(tick);
+      pending = requestAnimationFrame(tick);
     }
   });
 
-  requestAnimationFrame(tick);
+  pending = requestAnimationFrame(tick);
 }

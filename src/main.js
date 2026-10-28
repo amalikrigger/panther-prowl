@@ -19,7 +19,7 @@ import { startLoop } from './engine/loop.js';
 import { unlock, setMuted, isMuted, sounds } from './audio/sound.js';
 import { load, save } from './storage/store.js';
 import { loadSettings, saveSettings, loadLeaderboard, addToLeaderboard, resetLeaderboard, nextPlayNumber, loadPrizeLog, logPrize } from './storage/booth.js';
-import { showScreen, showBanner, hideBanner, showResults, showMazeProblems } from './ui/screens.js';
+import { showScreen, showBanner, hideBanner, showResults, showMazeProblems, sinceScreenChange } from './ui/screens.js';
 import { Hud } from './ui/hud.js';
 import { setupFullscreen } from './ui/fullscreen.js';
 import { showPrize, stopPrizeClock } from './ui/prize.js';
@@ -78,6 +78,8 @@ const controls = new Controls({
 // -----------------------------------------------------------------------------
 
 function relayout() {
+  // Mid-rotation, some browsers briefly report a 0×0 window. Wait for a real size.
+  if (window.innerWidth < 1 || window.innerHeight < 1) return;
   const style = getComputedStyle(document.documentElement);
   const safe = (name) => parseFloat(style.getPropertyValue(name)) || 0;
   const screenSize = {
@@ -239,6 +241,7 @@ function finishChallenge() {
   }
 
   challengeResult = { score, day, board, qualifies: qualifies(loadLeaderboard(), score, { board, day }) };
+  hideBanner();
   screen = 'prize';
   showPrize({ score, tier, nextTier, station });
   if (tier) sounds.cleared();
@@ -317,8 +320,9 @@ function openStaff() {
 
 const KIOSK_TITLE_SECONDS = 20;     // title, then...
 const KIOSK_BOARD_SECONDS = 10;     // ...high scores, then title again
-// (Includes 'pause': a game someone paused and walked away from.)
-const kioskScreens = ['results', 'prize', 'initials', 'leaderboard', 'pause'];
+// (Includes 'pause': a game someone paused and walked away from, and
+// the staff screens, so a panel left open can't be used by players.)
+const kioskScreens = ['results', 'prize', 'initials', 'leaderboard', 'pause', 'staff-pin', 'staff'];
 
 function updateKiosk() {
   if (!settings.kiosk) return;
@@ -486,9 +490,17 @@ function frame(dt, time) {
 // Buttons
 // -----------------------------------------------------------------------------
 
+// A double-tap can land on the NEXT screen's button while the old screen
+// fades. Ignore taps right after a screen change, and give the prize screen
+// a moment so a volunteer always gets to see it.
+const TAP_GUARD_MS = 350;
+const PRIZE_GUARD_MS = 1500;
+
 document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
   if (!button) return;
+  const guard = screen === 'prize' ? PRIZE_GUARD_MS : TAP_GUARD_MS;
+  if (sinceScreenChange() < guard) return;
   unlock();
   sounds.tap();
   switch (button.dataset.action) {

@@ -219,6 +219,41 @@ export class Maze {
     if (this.candy.length === 0) this.error('There is no candy (.) to eat.');
   }
 
+  /**
+   * How many steps from every hallway tile to the tile just outside the
+   * ghost-house door. Pounced ghost eyes follow this map home.
+   *
+   * Why a map? Heading "roughly toward" home (like roaming ghosts do) can go
+   * round and round a loop forever in some mazes. This map is made with a
+   * breadth-first search: start at home (0 steps), then mark every neighbor
+   * 1 step, their neighbors 2 steps, and so on, like ripples in a pond. From
+   * any tile, stepping to the neighbor with a smaller number always gets
+   * closer, so the eyes can never get lost.
+   */
+  get stepsHome() {
+    if (!this.stepsHomeMap) {
+      const steps = new Map();
+      const home = this.outsideDoor;
+      steps.set(`${home.col},${home.row}`, 0);
+      const queue = [home];
+      for (let i = 0; i < queue.length; i++) {
+        const { col, row } = queue[i];
+        const here = steps.get(`${col},${row}`);
+        for (const direction of ['up', 'down', 'left', 'right']) {
+          const next = this.neighbor(col, row, direction);
+          const nextCol = this.wrapCol(next.col);
+          const nextRow = this.wrapRow(next.row);
+          const id = `${nextCol},${nextRow}`;
+          if (steps.has(id) || !this.isOpen(nextCol, nextRow)) continue;
+          steps.set(id, here + 1);
+          queue.push({ col: nextCol, row: nextRow });
+        }
+      }
+      this.stepsHomeMap = steps;
+    }
+    return this.stepsHomeMap;
+  }
+
   /** Every open tile you can walk to from `start` (wrapping through tunnels, not through the door). */
   floodFill(start) {
     const found = new Map();
